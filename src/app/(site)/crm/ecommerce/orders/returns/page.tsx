@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { ReturnsAndRefunds } from "@/components/crm/orders/returns-refunds"
 
 export const metadata: Metadata = {
-    title: "Returns & Refunds - TrackMaster CRM",
+    title: "Returns & Refunds - BookMaster",
     description: "Process and manage your returns and refunds",
 }
 

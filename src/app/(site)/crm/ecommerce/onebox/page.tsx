@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { OneBox } from "@/components/crm/communication/onebox"
 
 export const metadata: Metadata = {
-    title: "OneBox - TrackMaster CRM",
+    title: "OneBox - BookMaster",
     description: "Unified communication hub for staff and customer interactions",
 }
 

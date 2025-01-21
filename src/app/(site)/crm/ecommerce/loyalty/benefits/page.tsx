@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { BenefitsContent } from "@/components/crm/loyalty/benefits"
 
 export const metadata: Metadata = {
-    title: "Member Benefits - TrackMaster CRM",
+    title: "Member Benefits - BookMaster",
     description: "Manage loyalty program benefits and tier privileges"
 }
 
