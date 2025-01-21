@@ -34,36 +34,71 @@ async function createSupabaseUser(email: string, password: string) {
   return user.user
 }
 
+async function clearExistingData() {
+  console.log('Clearing existing data...')
+  
+  // Delete in correct order due to foreign key constraints
+  await prisma.operationItem.deleteMany({})
+  await prisma.operation.deleteMany({})
+  await prisma.transaction.deleteMany({})
+  await prisma.inventoryItem.deleteMany({})
+  await prisma.batch.deleteMany({})
+  await prisma.vendor.deleteMany({})
+  await prisma.account.deleteMany({})
+  await prisma.user.deleteMany({})
+  await prisma.product.deleteMany({})
+  await prisma.warehouse.deleteMany({})
+  await prisma.client.deleteMany({})
+  
+  console.log('Existing data cleared')
+}
+
 async function main() {
   try {
-    // // First create the user in Supabase
-    // const supabaseUser = await createSupabaseUser('crm@metroshop.al', 'C3M-Mshop!-2025x')
+    // Clear existing data first
+    await clearExistingData()
+
+    // First create the user in Supabase
+    // const supabaseUser = await createSupabaseUser('finance@metroshop.al', 'BM-Mshop!-2025x')
     // console.log('Created Supabase user:', supabaseUser)
 
     // Create the client
     const client = await prisma.client.create({
       data: {
         name: 'Metroshop.al',
-        type: 'ECOMMERCE',
-        industry: 'Retail',
-        website: 'https://metroshop.al',
-        description: 'Leading ecommerce platform in Albania',
+        code: 'MSHOP',
+        taxId: 'L72119451A',
+        address: 'Rruga Myslym Shyri, Tirana, Albania',
+        phone: '+355 69 123 4567',
+        email: 'info@metroshop.al',
+        defaultCurrency: 'ALL',
+        supabaseId: '31659dc1-0829-4fad-b091-71acb043f6bc',
         status: 'ACTIVE',
       }
     })
     console.log('Created client:', client)
 
-    // Create the CRM admin user
-    const hashedPassword = await bcrypt.hash('C3M-Mshop!-2025x', 12)
+    // Create main warehouse
+    const warehouse = await prisma.warehouse.create({
+      data: {
+        name: 'Main Warehouse',
+        code: 'WH-MAIN',
+        clientId: client.id,
+        address: 'Rruga Myslym Shyri, Tirana, Albania',
+        isActive: true
+      }
+    })
+    console.log('Created warehouse:', warehouse)
+
+    // Create the BookMaster admin user
     const user = await prisma.user.create({
       data: {
-        email: 'crm@metroshop.al',
-        name: 'Metroshop CRM Admin',
-        password: hashedPassword,
-        // supabaseId: supabaseUser.id,
-        supabaseId: '72a4c59d-7d66-44ea-9da2-54fddd274b96',
+        email: 'finance@metroshop.al',
+        name: 'Metroshop Finance Admin',
         role: 'ADMIN',
         clientId: client.id,
+        warehouseId: warehouse.id,
+        supabaseId: '31659dc1-0829-4fad-b091-71acb043f6bc'
       }
     })
     console.log('Created Prisma user:', user)
