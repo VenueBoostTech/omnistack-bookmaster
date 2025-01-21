@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { PointsRewardsContent } from "@/components/crm/loyalty/points"
 
 export const metadata: Metadata = {
-    title: "Points & Rewards - TrackMaster CRM",
+    title: "Points & Rewards - BookMaster",
     description: "Manage loyalty points and member rewards system"
 }
 

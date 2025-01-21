@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { AllOrders } from "@/components/crm/orders/all-orders"
 
 export const metadata: Metadata = {
-    title: "All Orders - TrackMaster CRM",
+    title: "All Orders - BookMaster",
     description: "Manage and track all your orders",
 }
 

@@ -41,11 +41,11 @@ const config: Config = {
           dark: "#394152",
         },
         primary: {
-          DEFAULT: "#2A8E9E",    // Base teal
-          light: "#3AADBF",      // Lighter teal
-          lighter: "#4FC3D5",    // Even lighter
-          dark: "#207180",       // Darker teal
-          darker: "#165B68",     // Even darker
+          DEFAULT: "#5FC4D0",    // New base teal
+          light: "#7ED1DA",      // Lighter variation
+          lighter: "#9DDEEE",    // Even lighter
+          dark: "#4BA3AD",       // Darker variation
+          darker: "#377A82",     // Even darker
         },
         secondary: {
           DEFAULT: "#9E2A5E",    // Complementary color
@@ -231,7 +231,7 @@ const config: Config = {
       boxShadow: {
         1: "0px 1px 2px 0px rgba(84, 87, 118, 0.10)",
         error: "0px 12px 34px 0px rgba(13, 10, 44, 0.05)",
-        input: "inset 0 0 0 2px #2A8E9E",  // Updated to match new primary color
+        input: "inset 0 0 0 2px #5FC4D0",  // Updated to match new primary color
         dropdown: "0px 4px 12px 0px rgba(15, 23, 42, 0.10)",
         darkdropdown: "0px 4px 12px 0px rgba(255, 255, 255, 0.05)",
         features: "0px 8px 20px 0px rgba(113, 116, 152, 0.05)",

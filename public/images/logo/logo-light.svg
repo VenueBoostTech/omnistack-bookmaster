@@ -6,7 +6,7 @@
       .text-logo {
         font-family: 'Manrope', sans-serif;
         font-weight: 700;
-        fill: #2A8E9E;
+        fill: #5FC4D0;
       }
     </style>
   </defs>
@@ -17,6 +17,6 @@
     font-size="150" 
     text-anchor="middle"
     dominant-baseline="middle">
-    TrackMaster
+    BookMaster
   </text>
 </svg>

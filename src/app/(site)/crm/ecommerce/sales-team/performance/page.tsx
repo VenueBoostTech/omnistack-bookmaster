@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { SalesPerformance } from "@/components/crm/sales-team/performance"
 
 export const metadata: Metadata = {
-    title: "Sales Team Performance - TrackMaster CRM",
+    title: "Sales Team Performance - BookMaster",
     description: "Monitor and analyze sales team performance metrics",
 }
 

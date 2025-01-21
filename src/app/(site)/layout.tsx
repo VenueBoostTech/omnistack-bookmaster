@@ -20,7 +20,7 @@ export default function RootLayout({
 				<ToastContext />
 				<Providers>
 					<NextTopLoader
-						color='#2A8E9E'
+						color='#5FC4D0'
 						crawlSpeed={300}
 						showSpinner={false}
 						shadow='none'
