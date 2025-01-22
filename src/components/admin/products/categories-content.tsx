@@ -1,11 +1,10 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import {
   Boxes,
   Search,
@@ -125,6 +124,9 @@ const CATEGORIES = [
 ];
 
 export function CategoriesContent() {
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -180,14 +182,58 @@ export function CategoriesContent() {
         ))}
       </div>
 
-      {/* Search */}
+      {/* Updated Filter Card */}
       <Card>
-        <CardContent className="p-4">
+        <CardHeader>
+          <div className='mb-2'>
+          <h3 className="text-lg">Filter Categories</h3>
+          <p className="text-sm text-muted-foreground">
+            Search and filter through product categories
+          </p>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: 'all', label: 'All Categories', count: 12 },
+              { value: 'active', label: 'Active', count: 10 },
+              { value: 'alerts', label: 'With Alerts', count: 4 },
+              { value: 'empty', label: 'No Products', count: 2 }
+            ].map((status) => (
+              <Button
+                key={status.value}
+                variant={selectedStatus === status.value ? "default" : "outline"}
+                className={`group ${
+                  selectedStatus === status.value ? "bg-red-600 hover:bg-red-700" : ""
+                }`}
+                onClick={() => setSelectedStatus(status.value)}
+              >
+                <span className={selectedStatus === status.value ? "text-white" : "text-gray-700"}>
+                  {status.label}
+                </span>
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-2 ${
+                    selectedStatus === status.value 
+                      ? "bg-red-700 text-white" 
+                      : "text-gray-100"
+                  }`}
+                >
+                  {status.count}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+
+          {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search categories..." 
-              className="pl-9 w-full max-w-xl"
+              placeholder="Search categories by name, code, or description..." 
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </CardContent>
@@ -309,6 +355,9 @@ export function CategoriesContent() {
           </Card>
         ))}
       </div>
+
+      {/* Bottom spacing */}
+      <div className="h-8" />
     </div>
   );
 }
