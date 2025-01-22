@@ -6,25 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import InputSelect from "@/components/Common/InputSelect";
 import {
-  Building2,
   SaveIcon,
-  Globe,
-  Currency,
-  Bell,
-  Mail,
-  Warehouse,
-  Receipt,
-  FileText,
-  Calculator,
-  Scale,
-  Key,
-  Link,
-  Archive,
-  Database,
-  ShieldCheck
 } from "lucide-react";
 
 const INTEGRATIONS = [
@@ -49,6 +34,41 @@ const INTEGRATIONS = [
 ];
 
 export function SettingsContent() {
+  // State for select values
+  const [language, setLanguage] = React.useState("en");
+  const [currency, setCurrency] = React.useState("ALL");
+  const [dateFormat, setDateFormat] = React.useState("dd/mm/yyyy");
+  const [timezone, setTimezone] = React.useState("europe-tirana");
+  const [fiscalYear, setFiscalYear] = React.useState("01");
+
+  // Options for select inputs
+  const languageOptions = [
+    { value: "en", label: "English" },
+    { value: "al", label: "Albanian" }
+  ];
+
+  const currencyOptions = [
+    { value: "ALL", label: "Albanian Lek (ALL)" },
+    { value: "EUR", label: "Euro (EUR)" },
+    { value: "USD", label: "US Dollar (USD)" }
+  ];
+
+  const dateFormatOptions = [
+    { value: "dd/mm/yyyy", label: "DD/MM/YYYY" },
+    { value: "mm/dd/yyyy", label: "MM/DD/YYYY" },
+    { value: "yyyy-mm-dd", label: "YYYY-MM-DD" }
+  ];
+
+  const timezoneOptions = [
+    { value: "europe-tirana", label: "Europe/Tirana" },
+    { value: "utc", label: "UTC" }
+  ];
+
+  const fiscalYearOptions = [
+    { value: "01", label: "January" },
+    { value: "07", label: "July" }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -79,7 +99,6 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Company Information</CardTitle>
-              {/* <CardDescription>Update your company details and preferences</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -107,60 +126,37 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Localization</CardTitle>
-              {/* <CardDescription>Configure regional settings</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Language</label>
-                  <Select defaultValue="en">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="al">Albanian</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Currency</label>
-                  <Select defaultValue="ALL">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">Albanian Lek (ALL)</SelectItem>
-                      <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                      <SelectItem value="USD">US Dollar (USD)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Date Format</label>
-                  <Select defaultValue="dd/mm/yyyy">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select date format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
-                      <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
-                      <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Time Zone</label>
-                  <Select defaultValue="europe-tirana">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="europe-tirana">Europe/Tirana</SelectItem>
-                      <SelectItem value="utc">UTC</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <InputSelect
+                  name="language"
+                  label="Language"
+                  options={languageOptions}
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                />
+                <InputSelect
+                  name="currency"
+                  label="Currency"
+                  options={currencyOptions}
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                />
+                <InputSelect
+                  name="dateFormat"
+                  label="Date Format"
+                  options={dateFormatOptions}
+                  value={dateFormat}
+                  onChange={(e) => setDateFormat(e.target.value)}
+                />
+                <InputSelect
+                  name="timezone"
+                  label="Time Zone"
+                  options={timezoneOptions}
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -169,7 +165,6 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
-              {/* <CardDescription>Configure notification preferences</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
@@ -205,22 +200,16 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Accounting Preferences</CardTitle>
-              {/* <CardDescription>Configure your accounting settings</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Fiscal Year Start</label>
-                  <Select defaultValue="01">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="01">January</SelectItem>
-                      <SelectItem value="07">July</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <InputSelect
+                  name="fiscalYear"
+                  label="Fiscal Year Start"
+                  options={fiscalYearOptions}
+                  value={fiscalYear}
+                  onChange={(e) => setFiscalYear(e.target.value)}
+                />
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tax Rate (%)</label>
                   <Input type="number" placeholder="Enter tax rate" defaultValue="20" />
@@ -250,7 +239,6 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Document Settings</CardTitle>
-              {/* <CardDescription>Configure invoice and document preferences</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -272,7 +260,6 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Connected Services</CardTitle>
-              {/* <CardDescription>Manage your integrated services and connections</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-6">
               {INTEGRATIONS.map((integration) => (
@@ -312,7 +299,6 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Automated Tasks</CardTitle>
-              {/* <CardDescription>Configure automated processes and tasks</CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
