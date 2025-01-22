@@ -11,11 +11,15 @@ export default async function Home() {
 
     // Replicate middleware logic for redirection
     if (userRole === "ADMIN") {
-      redirect("/crm/ecommerce/dashboard");
+      redirect("/admin/dashboard");
     } else {
       // If no user or redirection, render login page
       return null;
     }
+  }
+  else {
+    // if no session redirect login
+    redirect("/auth/login");
   }
 
   // If no user or redirection, render login page
