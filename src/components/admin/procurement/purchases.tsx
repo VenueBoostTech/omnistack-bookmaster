@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +151,10 @@ const getPriorityBadge = (priority: string) => {
 };
 
 export function PurchasesContent() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const totalItems = 100; // Replace with actual total
+  const totalPages = Math.ceil(totalItems / pageSize);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -216,10 +220,10 @@ export function PurchasesContent() {
             </p>
           </div>
         </CardHeader>
-        <CardContent className="p-6 pt-0">
+        <CardContent className="p-0 pt-0">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex items-center flex-1 gap-2 w-full">
-              <div className="relative flex-1">
+              <div className="relative mt-2 flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search orders by ID, vendor, or items..." 
@@ -369,27 +373,66 @@ export function PurchasesContent() {
             </CardContent>
           </Card>
         ))}
+        {/* Pagination */}
+        <div className="border-t px-4 py-4 flex items-center justify-between bg-white">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Rows per page</p>
+            <select
+              className="h-8 w-16 rounded-md border border-input bg-background"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Page {page} of {totalPages}
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => p - 1)}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+            .map((p, i, arr) => (
+              <React.Fragment key={p}>
+                {i > 0 && arr[i - 1] !== p - 1 && (
+                  <span className="px-2">...</span>
+                )}
+                <Button
+                  variant={page === p ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
+                >
+                  {p}
+                </Button>
+              </React.Fragment>
+            ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => p + 1)}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t pt-6">
-        <InputSelect
-          name="pageSize"
-          label=""
-          value="10"
-          onChange={() => {}}
-          options={[
-            { value: "10", label: "10 per page" },
-            { value: "20", label: "20 per page" },
-            { value: "50", label: "50 per page" }
-          ]}
-        />
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">10</span> of{" "}
-          <span className="font-medium">100</span> orders
-        </p>
-      </div>
+      
     </div>
   );
 }
