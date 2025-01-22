@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,7 +125,32 @@ const getTypeIcon = (type: string) => {
 };
 
 export function TransactionsContent() {
-  const [selectedType, setSelectedType] = React.useState("ALL");
+  const [selectedType, setSelectedType] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Filter transactions based on type and search
+  const filteredTransactions = useMemo(() => {
+    return TRANSACTIONS_DATA.filter(transaction => {
+      const matchesType = selectedType === "ALL" || transaction.type === selectedType;
+      const matchesSearch = 
+        transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.account.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return matchesType && matchesSearch;
+    });
+  }, [selectedType, searchTerm]);
+
+  // Calculate pagination
+  const totalFilteredItems = filteredTransactions.length;
+  const totalPages = Math.ceil(totalFilteredItems / pageSize);
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredTransactions.slice(startIndex, startIndex + pageSize);
+  }, [filteredTransactions, page, pageSize]);
 
   return (
     <div className="space-y-6">
@@ -205,40 +230,69 @@ export function TransactionsContent() {
         </Card>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        <div className="flex gap-2">
-          {TRANSACTION_TYPES.map((type) => (
-            <Button
-              key={type.value}
-              variant={selectedType === type.value ? "secondary" : "outline"}
-              className="flex gap-2"
-              onClick={() => setSelectedType(type.value)}
-            >
-              {type.label}
-              <Badge variant="secondary" className="ml-1">
-                {type.count}
-              </Badge>
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search transactions..." className="pl-8" />
+      {/* Filters Card */}
+      <Card>
+        <CardHeader>
+          <div className='mb-2'>
+            <h3 className="text-lg">Filter Transactions</h3>
+            <p className="text-sm text-muted-foreground">
+              Search and filter through your financial transactions
+            </p>
           </div>
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Date Range
-          </Button>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Transaction Type Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {TRANSACTION_TYPES.map((type) => (
+              <Button
+                key={type.value}
+                variant={selectedType === type.value ? "default" : "outline"}
+                className={`group ${
+                  selectedType === type.value ? "bg-red-600 hover:bg-red-700" : ""
+                }`}
+                onClick={() => setSelectedType(type.value)}
+              >
+                <span className={selectedType === type.value ? "text-white" : "text-gray-700"}>
+                  {type.label}
+                </span>
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-2 ${
+                    selectedType === type.value 
+                      ? "bg-red-700 text-white" 
+                      : "text-gray-100"
+                  }`}
+                >
+                  {type.count}
+                </Badge>
+              </Button>
+            ))}
+          </div>
 
-      {/* Transactions Table */}
+          {/* Search and Additional Filters */}
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search transactions..." 
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button variant="outline">
+              <Calendar className="h-4 w-4 mr-2" />
+              Date Range
+            </Button>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transactions Table Card */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -257,7 +311,7 @@ export function TransactionsContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {TRANSACTIONS_DATA.map((transaction) => (
+              {paginatedTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">{transaction.id}</TableCell>
                   <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
@@ -295,8 +349,69 @@ export function TransactionsContent() {
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          <div className="border-t px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <select
+                  className="h-8 w-16 rounded-md border border-input bg-background"
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                >
+                  {[5, 10, 20, 50].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Page {page} of {totalPages}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p - 1)}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && arr[i - 1] !== p - 1 && (
+                      <span className="px-2">...</span>
+                    )}
+                    <Button
+                      variant={page === p ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(p)}
+                      className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
+                    >
+                      {p}
+                    </Button>
+                  </React.Fragment>
+                ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p + 1)}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Bottom spacing */}
+      <div className="h-8" />
     </div>
   );
 }
