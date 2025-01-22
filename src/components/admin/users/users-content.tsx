@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,7 +104,31 @@ const getStatusColor = (status: string) => {
 };
 
 export function UsersContent() {
-  const [selectedRole, setSelectedRole] = React.useState("ALL");
+  const [selectedRole, setSelectedRole] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Filter users based on role and search
+  const filteredUsers = useMemo(() => {
+    return USERS_DATA.filter(user => {
+      const matchesRole = selectedRole === "ALL" || user.role === selectedRole;
+      const matchesSearch = 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.warehouse.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return matchesRole && matchesSearch;
+    });
+  }, [selectedRole, searchTerm]);
+
+  // Calculate pagination
+  const totalFilteredItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalFilteredItems / pageSize);
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredUsers.slice(startIndex, startIndex + pageSize);
+  }, [filteredUsers, page, pageSize]);
 
   return (
     <div className="space-y-6">
@@ -184,36 +208,65 @@ export function UsersContent() {
         </Card>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        <div className="flex gap-2">
-          {USER_ROLES.map((role) => (
-            <Button
-              key={role.value}
-              variant={selectedRole === role.value ? "secondary" : "outline"}
-              className="flex gap-2"
-              onClick={() => setSelectedRole(role.value)}
-            >
-              {role.label}
-              <Badge variant="secondary" className="ml-1">
-                {role.count}
-              </Badge>
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search users..." className="pl-8" />
+      {/* Filters Card */}
+      <Card>
+        <CardHeader>
+        <div className='mb-2'>
+          <h3 className="text-lg">Filter Users</h3>
+          <p className="text-sm text-muted-foreground">
+            Search and filter through user accounts
+          </p>
           </div>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Role Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {USER_ROLES.map((role) => (
+              <Button
+                key={role.value}
+                variant={selectedRole === role.value ? "default" : "outline"}
+                className={`group ${
+                  selectedRole === role.value ? "bg-red-600 hover:bg-red-700" : ""
+                }`}
+                onClick={() => setSelectedRole(role.value)}
+              >
+                <span className={selectedRole === role.value ? "text-white" : "text-gray-700"}>
+                  {role.label}
+                </span>
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-2 ${
+                    selectedRole === role.value 
+                      ? "bg-red-700 text-white" 
+                      : "text-gray-100"
+                  }`}
+                >
+                  {role.count}
+                </Badge>
+              </Button>
+            ))}
+          </div>
 
-      {/* Users Table */}
+          {/* Search Bar */}
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search users..." 
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Users Table Card */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -229,7 +282,7 @@ export function UsersContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {USERS_DATA.map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>
@@ -274,8 +327,69 @@ export function UsersContent() {
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          <div className="border-t px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <select
+                  className="h-8 w-16 rounded-md border border-input bg-background"
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                >
+                  {[5, 10, 20, 50].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Page {page} of {totalPages}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p - 1)}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && arr[i - 1] !== p - 1 && (
+                      <span className="px-2">...</span>
+                    )}
+                    <Button
+                      variant={page === p ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(p)}
+                      className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
+                    >
+                      {p}
+                    </Button>
+                  </React.Fragment>
+                ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p + 1)}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Bottom spacing */}
+      <div className="h-8" />
     </div>
   );
 }
