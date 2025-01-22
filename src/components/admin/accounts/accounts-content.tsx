@@ -124,33 +124,46 @@ export function AccountsContent() {
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        <div className="flex gap-2">
-          {ACCOUNT_TYPES.map((type) => (
-            <Button
-              key={type.value}
-              variant={selectedType === type.value ? "secondary" : "outline"}
-              className="flex gap-2"
-              onClick={() => setSelectedType(type.value)}
-            >
-              {type.label}
-              <Badge variant="secondary" className="ml-1">
-                {type.count}
-              </Badge>
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search accounts..." className="pl-8" />
-          </div>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
+<Card>
+  <CardHeader>
+  <div>
+  <h3 className="font-medium">Filters</h3>
+            <p className="text-sm text-muted-foreground">
+            Filter and search through your accounts
+            </p>
+            </div>
+ 
+  </CardHeader>
+  <CardContent className='pt-4'>
+    <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+      <div className="flex gap-2 overflow-x-auto">
+        {ACCOUNT_TYPES.map((type) => (
+          <Button
+            key={type.value}
+            variant={selectedType === type.value ? "secondary" : "outline"}
+            className="flex gap-2 whitespace-nowrap"
+            onClick={() => setSelectedType(type.value)}
+          >
+            {type.label}
+            <Badge variant="secondary" className="ml-1">
+              {type.count}
+            </Badge>
           </Button>
-        </div>
+        ))}
       </div>
+      <div className="flex gap-2 items-center">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search accounts..." className="pl-8 w-[250px]" />
+        </div>
+        <Button variant="outline">
+          <Filter className="h-4 w-4 mr-2" />
+          Filters
+        </Button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
 
       {/* Accounts Table */}
       <Card>
