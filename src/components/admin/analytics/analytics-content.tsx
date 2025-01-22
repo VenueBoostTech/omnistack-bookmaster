@@ -247,22 +247,14 @@ export function AnalyticsContent() {
 
         {/* Performance Chart */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Monthly Performance</CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="outline" style={{ backgroundColor: "#5FC4D020", color: "#5FC4D0" }}>
-                  Revenue
-                </Badge>
-                <Badge variant="outline" style={{ backgroundColor: "#EF444420", color: "#EF4444" }}>
-                  Expenses
-                </Badge>
-                <Badge variant="outline" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>
-                  Profit
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+    <CardTitle className="text-xl font-semibold">Monthly Performance</CardTitle>
+    <div className="flex items-center space-x-2">
+      <Badge variant="outline" style={{ backgroundColor: "#5FC4D020", color: "#5FC4D0" }}>Revenue</Badge>
+      <Badge variant="outline" style={{ backgroundColor: "#EF444420", color: "#EF4444" }}>Expenses</Badge>
+      <Badge variant="outline" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>Profit</Badge>
+    </div>
+  </CardHeader>
           <CardContent>
             <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -313,9 +305,9 @@ export function AnalyticsContent() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Expense Distribution Chart */}
           <Card>
-            <CardHeader>
-              <CardTitle>Distribution by Category</CardTitle>
-            </CardHeader>
+          <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+    <CardTitle className="text-xl font-semibold">Distribution by Category</CardTitle>
+  </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -346,9 +338,9 @@ export function AnalyticsContent() {
 
           {/* Expense Details */}
           <Card>
-            <CardHeader>
-              <CardTitle>Monthly Comparison</CardTitle>
-            </CardHeader>
+          <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+    <CardTitle className="text-xl font-semibold">Monthly Comparison</CardTitle>
+  </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {EXPENSE_DETAILS.map((category) => (
@@ -387,9 +379,9 @@ export function AnalyticsContent() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Expense Breakdown */}
         <Card>
-          <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
-          </CardHeader>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+    <CardTitle className="text-xl font-semibold">Expense Breakdown</CardTitle>
+  </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -418,9 +410,9 @@ export function AnalyticsContent() {
 
         {/* Account Balances */}
         <Card>
-          <CardHeader>
-            <CardTitle>Account Balances</CardTitle>
-          </CardHeader>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+    <CardTitle className="text-xl font-semibold">Account Balances</CardTitle>
+  </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {ACCOUNT_BALANCES.map((account) => (
