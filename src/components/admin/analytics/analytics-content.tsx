@@ -17,7 +17,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import {
   Wallet,
@@ -30,7 +31,11 @@ import {
   CreditCard,
   Receipt,
   PiggyBank,
-  Scale
+  Scale,
+  DollarSign,
+  Briefcase,
+  Building2,
+  ShoppingCart
 } from "lucide-react";
 
 const KPI_METRICS = [
@@ -73,21 +78,53 @@ const KPI_METRICS = [
 ];
 
 const MONTHLY_FINANCIAL_DATA = [
-  { month: 'Jan', revenue: 145000, expenses: 95000, profit: 50000 },
-  { month: 'Feb', revenue: 152000, expenses: 98000, profit: 54000 },
-  { month: 'Mar', revenue: 160000, expenses: 102000, profit: 58000 },
-  { month: 'Apr', revenue: 155000, expenses: 97000, profit: 58000 },
-  { month: 'May', revenue: 165000, expenses: 105000, profit: 60000 },
-  { month: 'Jun', revenue: 172000, expenses: 108000, profit: 64000 }
+  { month: 'Jul', revenue: 125000, expenses: 82000, profit: 43000 },
+  { month: 'Aug', revenue: 132000, expenses: 85000, profit: 47000 },
+  { month: 'Sep', revenue: 145000, expenses: 90000, profit: 55000 },
+  { month: 'Oct', revenue: 141000, expenses: 88000, profit: 53000 },
+  { month: 'Nov', revenue: 165000, expenses: 98000, profit: 67000 },
+  { month: 'Dec', revenue: 180000, expenses: 105000, profit: 75000 },
+  { month: 'Jan', revenue: 172000, expenses: 100000, profit: 72000 }
 ];
 
+const FINANCIAL_PERFORMANCE_METRICS = [
+    {
+      title: "Monthly Revenue",
+      value: "€180,000",
+      change: "+15.2%",
+      trend: "up",
+      icon: DollarSign,
+      color: "#5FC4D0"
+    },
+    {
+      title: "Operating Expenses",
+      value: "€105,000",
+      change: "+7.1%",
+      trend: "up",
+      icon: Building2,
+      color: "#EF4444"
+    },
+    {
+      title: "Net Profit",
+      value: "€75,000",
+      change: "+11.9%",
+      trend: "up",
+      icon: TrendingUp,
+      color: "#22C55E"
+    }
+  ];
+  
+
+
 const EXPENSE_BREAKDOWN = [
-  { name: 'Inventory', value: 45000 },
-  { name: 'Operations', value: 25000 },
-  { name: 'Payroll', value: 20000 },
-  { name: 'Utilities', value: 8000 },
-  { name: 'Other', value: 10000 }
+  { name: 'Inventory Purchases', value: 42000, icon: ShoppingCart },
+  { name: 'Operating Costs', value: 28000, icon: Building2 },
+  { name: 'Personnel', value: 23000, icon: Briefcase },
+  { name: 'Marketing', value: 7000, icon: TrendingUp },
+  { name: 'Other', value: 5000, icon: Receipt }
 ];
+
+
 
 const ACCOUNT_BALANCES = [
   { account: "Cash", balance: 125000, change: 12500 },
@@ -97,7 +134,15 @@ const ACCOUNT_BALANCES = [
   { account: "Fixed Assets", balance: 250000, change: 0 }
 ];
 
-const COLORS = ['#5FC4D0', '#22C55E', '#6366F1', '#F59E0B', '#EC4899'];
+const EXPENSE_DETAILS = [
+    { category: 'Inventory', current: 42000, previous: 38000, change: 10.5 },
+    { category: 'Operations', current: 28000, previous: 25000, change: 12.0 },
+    { category: 'Personnel', current: 23000, previous: 21000, change: 9.5 },
+    { category: 'Marketing', current: 7000, previous: 6000, change: 16.7 },
+    { category: 'Other', current: 5000, previous: 4800, change: 4.2 }
+  ];
+  
+  const COLORS = ['#5FC4D0', '#22C55E', '#6366F1', '#F59E0B', '#EC4899'];
 
 export function AnalyticsContent() {
   return (
@@ -160,49 +205,183 @@ export function AnalyticsContent() {
         ))}
       </div>
 
-      {/* Financial Overview Chart */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Financial Performance</CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="secondary">Revenue</Badge>
-              <Badge variant="outline">Expenses</Badge>
-              <Badge variant="outline">Profit</Badge>
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold">Financial Performance</h2>
+        
+        {/* Performance Metrics Cards */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          {FINANCIAL_PERFORMANCE_METRICS.map((metric) => (
+            <Card key={metric.title}>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {metric.title}
+                    </p>
+                    <div className="space-y-1">
+                      <h3 className="text-2xl font-bold" style={{ color: metric.color }}>
+                        {metric.value}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <div className={`flex items-center text-xs ${
+                          metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {metric.trend === 'up' ? 
+                            <ArrowUpRight className="h-3 w-3 mr-1" /> : 
+                            <ArrowDownRight className="h-3 w-3 mr-1" />
+                          }
+                          {metric.change}
+                        </div>
+                        <p className="text-xs text-muted-foreground">vs last month</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${metric.color}20` }}>
+                    <metric.icon className="h-5 w-5" style={{ color: metric.color }} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Performance Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Monthly Performance</CardTitle>
+              <div className="flex gap-2">
+                <Badge variant="outline" style={{ backgroundColor: "#5FC4D020", color: "#5FC4D0" }}>
+                  Revenue
+                </Badge>
+                <Badge variant="outline" style={{ backgroundColor: "#EF444420", color: "#EF4444" }}>
+                  Expenses
+                </Badge>
+                <Badge variant="outline" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>
+                  Profit
+                </Badge>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={MONTHLY_FINANCIAL_DATA}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#5FC4D0" 
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="expenses" 
-                  stroke="#EF4444" 
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="profit" 
-                  stroke="#22C55E" 
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={MONTHLY_FINANCIAL_DATA}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="month" />
+                  <YAxis 
+                    tickFormatter={(value) => `€${(value / 1000)}k`}
+                  />
+                  <Tooltip 
+                    formatter={(value) => `€${value.toLocaleString()}`}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#5FC4D0" 
+                    strokeWidth={2}
+                    dot={{ r: 4, strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="expenses" 
+                    stroke="#EF4444" 
+                    strokeWidth={2}
+                    dot={{ r: 4, strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="profit" 
+                    stroke="#22C55E" 
+                    strokeWidth={2}
+                    dot={{ r: 4, strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Expense Analysis Section */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold">Expense Breakdown</h2>
+        
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Expense Distribution Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribution by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={EXPENSE_BREAKDOWN}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {EXPENSE_BREAKDOWN.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `€${value.toLocaleString()}`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Expense Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Comparison</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {EXPENSE_DETAILS.map((category) => (
+                  <div key={category.category}>
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <p className="font-medium">{category.category}</p>
+                        <p className="text-sm text-muted-foreground">
+                          €{category.current.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className={`flex items-center ${
+                        category.change > 0 ? 'text-amber-600' : 'text-green-600'
+                      }`}>
+                        {category.change > 0 ? (
+                          <ArrowUpRight className="h-4 w-4 mr-1" />
+                        ) : (
+                          <ArrowDownRight className="h-4 w-4 mr-1" />
+                        )}
+                        {category.change}%
+                      </div>
+                    </div>
+                    <Progress 
+                      value={category.current / (Math.max(...EXPENSE_DETAILS.map(d => d.current))) * 100} 
+                      className="h-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Expense Breakdown & Account Balances */}
       <div className="grid gap-6 md:grid-cols-2">
