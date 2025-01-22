@@ -185,16 +185,14 @@ export function DashboardContent() {
 
       {/* Charts */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Financial Overview</CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="secondary">Assets</Badge>
-              <Badge variant="outline">Inventory</Badge>
-              <Badge variant="outline">Purchases</Badge>
-            </div>
-          </div>
-        </CardHeader>
+      <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+   <CardTitle className="text-xl font-semibold">Financial Overview</CardTitle>
+   <div className="flex items-center space-x-2">
+     <Badge variant="secondary">Assets</Badge>
+     <Badge variant="outline">Inventory</Badge> 
+     <Badge variant="outline">Purchases</Badge>
+   </div>
+ </CardHeader>
         <CardContent>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -231,15 +229,13 @@ export function DashboardContent() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Warehouse Overview */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Warehouse Overview</CardTitle>
-              <Button variant="outline" size="sm">
-                <Store className="h-4 w-4 mr-2" />
-                View All
-              </Button>
-            </div>
-          </CardHeader>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+   <CardTitle className="text-xl font-semibold">Warehouse Overview</CardTitle>
+   <Button variant="outline" size="sm" className="self-start">
+     <Store className="h-4 w-4 mr-2" />
+     View All
+   </Button>
+ </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {INVENTORY_BY_WAREHOUSE.map((warehouse) => (
@@ -279,15 +275,13 @@ export function DashboardContent() {
 
         {/* Recent Operations */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Operations</CardTitle>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Operation
-              </Button>
-            </div>
-          </CardHeader>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+   <CardTitle className="text-xl font-semibold">Recent Operations</CardTitle>
+   <Button variant="outline" size="sm" className="self-start">
+     <Plus className="h-4 w-4 mr-2" />
+     New Operation
+   </Button>
+ </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {RECENT_OPERATIONS.map((operation) => (
