@@ -90,11 +90,15 @@ async function main() {
     })
     console.log('Created warehouse:', warehouse)
 
+    // Hash password for local storage
+    const hashedPassword = await bcrypt.hash('BM-Mshop!-2025x', 12)
+
     // Create the BookMaster admin user
     const user = await prisma.user.create({
       data: {
         email: 'finance@metroshop.al',
         name: 'Metroshop Finance Admin',
+        password: hashedPassword, // Added the hashed password
         role: 'ADMIN',
         clientId: client.id,
         warehouseId: warehouse.id,

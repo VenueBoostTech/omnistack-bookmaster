@@ -66,37 +66,28 @@ const MenuItem = ({ item, pathname, openMenus, toggleMenu }: any) => {
 
 interface SidebarProps {
   mainMenu: any[];
-  sales: any[];
-  crm: any[];
-  marketing: any[];
-  loyalty: any[];
-  communication: any[];
+  inventory: any[];
+  procurement: any[];
   finance: any[];
-  hr: any[];
+  administration: any[];
 }
 
 export default function Sidebar({
-  mainMenu,
-  sales,
-  crm,
-  marketing,
-  loyalty,
-  communication,
-  finance,
-  hr
+  mainMenu, 
+  inventory, 
+  procurement, 
+  finance, 
+  administration
 }: SidebarProps) {
   const pathname = usePathname()
   
   // Combine all menus for finding current open menu
   const allMenuItems = [
     ...mainMenu, 
-    ...sales, 
-    ...crm, 
-    ...marketing, 
-    ...loyalty, 
-    ...communication,
-    ...finance,
-    ...hr
+    ...inventory, 
+    ...procurement, 
+    ...finance, 
+    ...administration
   ]
   
   const currentOpenMenu = allMenuItems.find(
@@ -118,27 +109,27 @@ export default function Sidebar({
     <div className="flex flex-col h-full">
       {/* Logo Section */}
       <div className="flex-shrink-0 bg-white dark:bg-gray-800">
-  <div className="flex justify-center items-center h-[72px] px-6 border-b border-stroke dark:border-stroke-dark">
-    <Link href="/" className="flex items-center justify-center">
-      <Image
-        src="/images/logo/logo.svg"
-        alt="Logo"
-        width={160}
-        height={36}
-        className="dark:hidden"
-        priority
-      />
-      <Image
-        src="/images/logo/logo-light.svg"
-        alt="Logo"
-        width={160}
-        height={36}
-        className="hidden dark:block"
-        priority
-      />
-    </Link>
-  </div>
-</div>
+        <div className="flex justify-center items-center h-[72px] px-6 border-b border-stroke dark:border-stroke-dark">
+          <Link href="/" className="flex items-center justify-center">
+            <Image
+              src="/images/logo/logo.svg"
+              alt="Logo"
+              width={160}
+              height={36}
+              className="dark:hidden"
+              priority
+            />
+            <Image
+              src="/images/logo/logo-light.svg"
+              alt="Logo"
+              width={160}
+              height={36}
+              className="hidden dark:block"
+              priority
+            />
+          </Link>
+        </div>
+      </div>
 
       {/* Scrollable Menu Section */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -149,7 +140,7 @@ export default function Sidebar({
               Main Menu
             </h3>
             <nav className="space-y-1">
-              {mainMenu.map((item) => (
+            {mainMenu.map((item) => (
                 <MenuItem
                   key={item.id}
                   item={item}
@@ -161,13 +152,13 @@ export default function Sidebar({
             </nav>
           </div>
 
-          {/* Sales Section */}
+          {/* Inventory Section */}
           <div>
             <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Sales
+              Inventory
             </h3>
             <nav className="space-y-1">
-              {sales.map((item) => (
+              {inventory.map((item) => (
                 <MenuItem
                   key={item.id}
                   item={item}
@@ -179,67 +170,13 @@ export default function Sidebar({
             </nav>
           </div>
 
-          {/* CRM Section */}
+          {/* Procurement Section */}
           <div>
             <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              CRM
+              Procurement
             </h3>
             <nav className="space-y-1">
-              {crm.map((item) => (
-                <MenuItem
-                  key={item.id}
-                  item={item}
-                  pathname={pathname}
-                  openMenus={openMenus}
-                  toggleMenu={toggleMenu}
-                />
-              ))}
-            </nav>
-          </div>
-
-          {/* Marketing Section */}
-          <div>
-            <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Marketing
-            </h3>
-            <nav className="space-y-1">
-              {marketing.map((item) => (
-                <MenuItem
-                  key={item.id}
-                  item={item}
-                  pathname={pathname}
-                  openMenus={openMenus}
-                  toggleMenu={toggleMenu}
-                />
-              ))}
-            </nav>
-          </div>
-
-          {/* Loyalty Program Section */}
-          <div>
-            <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Loyalty Program
-            </h3>
-            <nav className="space-y-1">
-              {loyalty.map((item) => (
-                <MenuItem
-                  key={item.id}
-                  item={item}
-                  pathname={pathname}
-                  openMenus={openMenus}
-                  toggleMenu={toggleMenu}
-                />
-              ))}
-            </nav>
-          </div>
-
-          {/* Communication Section */}
-          <div>
-            <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Communication
-            </h3>
-            <nav className="space-y-1">
-              {communication.map((item) => (
+              {procurement.map((item) => (
                 <MenuItem
                   key={item.id}
                   item={item}
@@ -269,13 +206,13 @@ export default function Sidebar({
             </nav>
           </div>
 
-          {/* HR Section */}
+          {/* Administration Section */}
           <div className="mb-8">
             <h3 className="px-2 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              HR
+              Administration
             </h3>
             <nav className="space-y-1">
-              {hr.map((item) => (
+              {administration.map((item) => (
                 <MenuItem
                   key={item.id}
                   item={item}

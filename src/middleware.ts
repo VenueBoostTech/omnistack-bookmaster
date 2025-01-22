@@ -5,36 +5,40 @@ import { NextResponse } from "next/server"
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
-    const isCRMRoute = req.nextUrl.pathname.startsWith('/crm')
+    const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
     
-    if (isCRMRoute) {
-      // Get the client type from the URL
-      const pathParts = req.nextUrl.pathname.split('/')
-      const clientTypeIndex = pathParts.indexOf('crm') + 1
-      const requestedClientType = pathParts[clientTypeIndex]
-
-      // Check if user has access to the requested client type
-      if (!["ADMIN", "SALES", "MARKETING"].includes(token?.role as string)) {
+    if (isAdminRoute) {
+      // Check if user has a valid role
+      if (!["ADMIN", "MANAGER", "USER", "ACCOUNTANT"].includes(token?.role as string)) {
         return NextResponse.redirect(new URL("/auth/login", req.url))
       }
 
-      // For non-admin users, verify they can access the requested client type
-      if (token?.role !== "ADMIN" && token?.clientType && token.clientType.toLowerCase() !== requestedClientType) {
-        // Redirect to their assigned client type
-        return NextResponse.redirect(
-          new URL(`/crm/${token.clientType.toLowerCase()}/dashboard`, req.url)
-        )
+      // Restrict access to specific sections based on role
+      const pathParts = req.nextUrl.pathname.split('/')
+      const section = pathParts[2] // /admin/[section]/*
+
+      // Role-based access control
+      if (section) {
+        const restrictedAccess = {
+          // Financial sections restricted to ADMIN and ACCOUNTANT
+          'accounts': ['ADMIN', 'ACCOUNTANT'],
+          'transactions': ['ADMIN', 'ACCOUNTANT'],
+          'users': ['ADMIN'], // Only ADMIN can manage users
+          'settings': ['ADMIN'], // Only ADMIN can access settings
+        }
+
+        if (
+          restrictedAccess[section] && 
+          !restrictedAccess[section].includes(token?.role as string)
+        ) {
+          // Redirect to dashboard if user doesn't have access
+          return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+        }
       }
 
-      // If no client type in URL, redirect based on role/client type
-      if (!requestedClientType) {
-        if (token?.role === "ADMIN") {
-          return NextResponse.redirect(new URL("/crm/ecommerce/dashboard", req.url))
-        } else if (token?.clientType) {
-          return NextResponse.redirect(
-            new URL(`/crm/${token.clientType.toLowerCase()}/dashboard`, req.url)
-          )
-        }
+      // If no specific route, redirect to dashboard
+      if (req.nextUrl.pathname === '/admin') {
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url))
       }
     }
   },
@@ -46,5 +50,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/crm/:path*"]
+  matcher: ["/admin/:path*"]
 }

@@ -8,13 +8,13 @@ export default async function Home() {
   if (user) {
     // Check user role and client type
     const userRole = user.role;
-    const clientType = user.client?.type;
 
     // Replicate middleware logic for redirection
     if (userRole === "ADMIN") {
       redirect("/crm/ecommerce/dashboard");
-    } else if (clientType) {
-      redirect(`/crm/${clientType.toLowerCase()}/dashboard`);
+    } else {
+      // If no user or redirection, render login page
+      return null;
     }
   }
 

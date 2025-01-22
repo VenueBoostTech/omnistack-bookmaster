@@ -8,9 +8,10 @@ import bcrypt from 'bcrypt'
 
 interface ExtendedUser extends User {
     role?: string;
-    clientId?: string;
-    clientType?: string;
+    clientId: string;
+    warehouseId?: string;
     supabaseId: string;
+    name: string;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -47,11 +48,7 @@ export const authOptions: NextAuthOptions = {
                         email: credentials.email
                     },
                     include: {
-                        client: {
-                            select: {
-                                type: true
-                            }
-                        }
+                        warehouse: true
                     }
                 })
 
@@ -61,7 +58,7 @@ export const authOptions: NextAuthOptions = {
 
                 const isPasswordValid = await bcrypt.compare(
                     credentials.password, 
-                    user.password
+                    user.password  // Compare with user.password instead of supabaseId
                 )
 
                 if (!isPasswordValid) {
@@ -73,8 +70,8 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     name: user.name,
                     role: user.role,
-                    clientId: user.clientId || undefined,
-                    clientType: user.client?.type,
+                    clientId: user.clientId,
+                    warehouseId: user.warehouseId || undefined,
                     supabaseId: user.supabaseId,
                     image: null
                 }
@@ -84,11 +81,12 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async jwt({ token, user }: { token: JWT, user?: ExtendedUser }): Promise<JWT> {
             if (user) {
-                token.role = user.role as "ADMIN" | "SALES" | "MARKETING"
+                token.role = user.role as "ADMIN" | "MANAGER" | "USER" | "ACCOUNTANT"
                 token.id = user.id
                 token.clientId = user.clientId
-                token.clientType = user.clientType as "ECOMMERCE" | "SAAS" | "FOOD_DELIVERY" | "RETAIL" | "SERVICES" | "OTHER"
+                token.warehouseId = user.warehouseId
                 token.supabaseId = user.supabaseId
+                token.name = user.name
             }
             return token
         },
@@ -97,19 +95,25 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role
                 session.user.id = token.id
                 session.user.clientId = token.clientId
-                session.user.clientType = token.clientType
+                session.user.warehouseId = token.warehouseId
                 session.user.supabaseId = token.supabaseId
+                session.user.name = token.name
             }
             return session
         }
     },
     events: {
         async signIn({ user }) {
-            await prisma.activity.create({
+            // Create transaction log for sign in
+            await prisma.transaction.create({
                 data: {
-                    type: 'CUSTOMER_PURCHASE',
+                    clientId: user.clientId,
+                    type: 'ADJUSTMENT',
+                    number: `LOGIN-${Date.now()}`,
+                    date: new Date(),
                     description: `User ${user.email} signed in`,
-                    userId: user.id,
+                    accountId: user.clientId, // Using clientId as default account for system logs
+                    status: 'POSTED'
                 }
             })
         }
