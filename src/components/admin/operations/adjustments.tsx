@@ -348,11 +348,7 @@ export function AdjustmentsContent() {
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Pagination */}
+            {/* Pagination */}
       <div className="flex items-center justify-between border-t pt-6">
         <InputSelect
           name="pageSize"
@@ -371,6 +367,12 @@ export function AdjustmentsContent() {
           <span className="font-medium">100</span> adjustments
         </p>
       </div>
+          </Card>
+        ))}
+        
+      </div>
+
+      
     </div>
   );
 }
