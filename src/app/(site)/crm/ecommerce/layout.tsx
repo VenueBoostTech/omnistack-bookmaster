@@ -3,31 +3,19 @@
 import { useState } from "react"
 import Sidebar from "@/components/dashboard/sidebar"
 import Header from "@/components/dashboard/header"
-import { usePathname } from "next/navigation"
 import getSidebarDataForType from "@/utils/getSidebarDataForType"
 
 // src/app/(site)/crm/layout.tsx
 const CRMEcommerceLayout = ({ children }: { children: React.ReactNode }) => {
   const [openSidebar, setOpenSidebar] = useState(false)
-  const pathname = usePathname()
-  
-  const getClientTypeFromPath = () => {
-    const pathParts = pathname.split('/')
-    const clientTypeIndex = pathParts.indexOf('crm') + 1
-    return pathParts[clientTypeIndex]
-  }
 
-  const clientType = getClientTypeFromPath()
   const { 
     mainMenu, 
-    sales, 
-    crm, 
-    marketing, 
-    loyalty, 
-    communication,
-    finance,
-    hr
-  } = getSidebarDataForType(clientType)
+    inventory, 
+    procurement, 
+    finance, 
+    administration,
+  } = getSidebarDataForType()
 
   return (
     <div className="flex h-screen">
@@ -39,13 +27,10 @@ const CRMEcommerceLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <Sidebar 
           mainMenu={mainMenu}
-          sales={sales}
-          crm={crm}
-          marketing={marketing}
-          loyalty={loyalty}
-          communication={communication}
+          inventory={inventory}
+          administration={administration}
+          procurement={procurement}
           finance={finance}
-          hr={hr}
         />
       </aside>
 
