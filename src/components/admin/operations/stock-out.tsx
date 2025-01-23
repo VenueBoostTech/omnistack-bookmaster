@@ -1,7 +1,7 @@
 "use client"
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -113,26 +113,35 @@ const STOCK_OUT_OPERATIONS = [
   }
 ];
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status) => {
   const variants = {
     'DISPATCHED': 'bg-green-100 text-green-800',
     'PICKING': 'bg-yellow-100 text-yellow-800',
     'READY': 'bg-blue-100 text-blue-800',
     'CANCELLED': 'bg-red-100 text-red-800'
   };
-  return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
+  return variants[status] || 'bg-gray-100 text-gray-800';
 };
 
-const getPriorityBadge = (priority: string) => {
+const getPriorityBadge = (priority) => {
   const variants = {
     'HIGH': 'bg-red-100 text-red-800',
     'NORMAL': 'bg-blue-100 text-blue-800',
     'LOW': 'bg-green-100 text-green-800'
   };
-  return variants[priority as keyof typeof variants] || 'bg-gray-100 text-gray-800';
+  return variants[priority] || 'bg-gray-100 text-gray-800';
 };
 
 export function StockOutContent() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [warehouseFilter, setWarehouseFilter] = useState("all");
+  const totalItems = STOCK_OUT_OPERATIONS.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -190,21 +199,31 @@ export function StockOutContent() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search operations..." 
-                className="pl-9 w-full"
-              />
-            </div>
-            <div className="flex gap-2">
+        <CardHeader>
+          <div className="mb-1">
+            <h3 className="font-medium">Filter Operations</h3>
+            <p className="text-sm text-muted-foreground">
+              Search and filter through stock operations
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center flex-1 gap-2 max-w-3xl">
+              <div className="relative mt-2 flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search operations..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
               <InputSelect
                 name="type"
                 label=""
-                value="all"
-                onChange={() => {}}
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
                 options={[
                   { value: "all", label: "All Types" },
                   { value: "sales", label: "Sales Order" },
@@ -214,8 +233,8 @@ export function StockOutContent() {
               <InputSelect
                 name="warehouse"
                 label=""
-                value="all"
-                onChange={() => {}}
+                value={warehouseFilter}
+                onChange={(e) => setWarehouseFilter(e.target.value)}
                 options={[
                   { value: "all", label: "All Warehouses" },
                   { value: "main", label: "Main Warehouse" },
@@ -226,8 +245,8 @@ export function StockOutContent() {
               <InputSelect
                 name="status"
                 label=""
-                value="all"
-                onChange={() => {}}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
                 options={[
                   { value: "all", label: "All Status" },
                   { value: "dispatched", label: "Dispatched" },
@@ -235,7 +254,7 @@ export function StockOutContent() {
                   { value: "ready", label: "Ready" }
                 ]}
               />
-              <Button variant="outline">
+              <Button variant="outline" className="mt-2">
                 <Filter className="h-4 w-4 mr-2" />
                 More Filters
               </Button>
@@ -350,25 +369,65 @@ export function StockOutContent() {
         ))}
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t pt-6">
-        <InputSelect
-          name="pageSize"
-          label=""
-          value="10"
-          onChange={() => {}}
-          options={[
-            { value: "10", label: "10 per page" },
-            { value: "20", label: "20 per page" },
-            { value: "50", label: "50 per page" }
-          ]}
-        />
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">10</span> of{" "}
-          <span className="font-medium">100</span> operations
-        </p>
+     {/* Pagination */}
+     <div className="border-t px-4 py-4 flex items-center justify-between bg-white">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Rows per page</p>
+            <select
+              className="h-8 w-16 rounded-md border border-input bg-background"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Page {page} of {totalPages}
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => p - 1)}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+            .map((p, i, arr) => (
+              <React.Fragment key={p}>
+                {i > 0 && arr[i - 1] !== p - 1 && (
+                  <span className="px-2">...</span>
+                )}
+                <Button
+                  variant={page === p ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
+                >
+                  {p}
+                </Button>
+              </React.Fragment>
+            ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => p + 1)}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
       </div>
+
+      <div className="h-8" />
     </div>
   );
 }
