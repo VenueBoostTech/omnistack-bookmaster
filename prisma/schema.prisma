@@ -26,6 +26,7 @@ model Client {
   transactions      Transaction[]
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+  defaultCurrency   Currency   @default(USD)
 }
 
 model User {
@@ -75,6 +76,7 @@ model Account {
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  currency      Currency   @default(USD)
 
   @@unique([clientId, code])
 }
@@ -96,6 +98,8 @@ model Transaction {
   sourceId      String?   // Reference to NestJS Operation
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  currency      Currency   @default(USD)
+  exchangeRate  Float?    // Store rate at transaction time
 
   @@unique([clientId, number])
 }
@@ -156,4 +160,10 @@ enum TransactionStatus {
   PENDING
   POSTED
   VOIDED
+}
+
+enum Currency {
+  USD
+  EUR
+  ALL
 }
