@@ -21,7 +21,6 @@ export async function getCurrentUser() {
       client: {
         select: {
           name: true,
-          type: true,
           status: true
         }
       }
