@@ -2,16 +2,26 @@ import * as React from "react";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
+  shadow?: "sm" | "md" | "lg" | "none";
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className = "", ...props }, ref) => (
-    <div
-      ref={ref}
-      className={`bg-white rounded-lg shadow-sm p-4 dark:bg-gray-800 ${className}`}
-      {...props}
-    />
-  )
+  ({ className = "", shadow = "sm", ...props }, ref) => {
+    const shadowStyles = {
+      none: "",
+      sm: "shadow-sm",
+      md: "shadow-md",
+      lg: "shadow-lg"
+    };
+
+    return (
+      <div
+        ref={ref}
+        className={`bg-white rounded-lg ${shadowStyles[shadow]} p-4 dark:bg-gray-800 ${className}`}
+        {...props}
+      />
+    );
+  }
 );
 Card.displayName = "Card";
 
