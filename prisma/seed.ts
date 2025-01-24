@@ -72,17 +72,7 @@ async function main() {
     })
     console.log('Created client:', client)
 
-    // Create main warehouse
-    const warehouse = await prisma.warehouse.create({
-      data: {
-        name: 'Main Warehouse',
-        code: 'WH-MAIN',
-        clientId: client.id,
-        address: 'Rruga Myslym Shyri, Tirana, Albania',
-        isActive: true
-      }
-    })
-    console.log('Created warehouse:', warehouse)
+    
 
     // Hash password for local storage
     const hashedPassword = await bcrypt.hash('BM-Mshop!-2025x', 12)
@@ -95,7 +85,6 @@ async function main() {
         password: hashedPassword, // Added the hashed password
         role: 'ADMIN',
         clientId: client.id,
-        warehouseId: warehouse.id,
         supabaseId: '31659dc1-0829-4fad-b091-71acb043f6bc'
       }
     })
