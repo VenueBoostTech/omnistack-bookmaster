@@ -21,6 +21,12 @@ import {
  XCircle
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { SyncSettingsModal } from './modals/sync-settings-modal'
+import { QuickImportModal } from './modals/quick-import-modal'
+import { ImportProgressModal } from './modals/import-progress-modal'
+import { ScanDetailsModal } from './modals/scan-details-modal'
+import { BrandSyncModal } from './modals/brand-sync-modal'
+import { ActivityDetailsModal } from './modals/activity-details-modal'
 
 interface SyncMethod {
  id: string;
@@ -74,7 +80,7 @@ const syncMethods: SyncMethod[] = [
    status: 'in_progress',
    progress: 45,
    type: 'sync',
-   brands: ['Swarovski', 'Villeroy & Boch', 'Blukids', 'Blukids']
+   brands: ['Swarovski', 'Villeroy & Boch', 'Blukids', 'Swatch']
  },
  {
    id: 'warehouse-scan',
@@ -139,6 +145,35 @@ const syncSchedule = [
 
 export function SyncCenterContent() {
  const [selectedTemplate, setSelectedTemplate] = useState('simple');
+ const [activeModal, setActiveModal] = useState<string | null>(null);
+ const [selectedBrand, setSelectedBrand] = useState<string>('');
+
+ const [modals, setModals] = useState({
+  brandSync: false,
+  scanDetails: false,
+  activityDetails: false,
+  importProgress: false
+});
+
+const [selectedActivity, setSelectedActivity] = useState(null);
+const [importProgress, setImportProgress] = useState(null);
+
+
+ const handleAction = (method: SyncMethod, action: 'start' | 'settings') => {
+   if (action === 'start') {
+     switch (method.type) {
+       case 'import':
+         setActiveModal('quick-import');
+         break;
+       case 'sync':
+         setActiveModal('sync-confirm');
+         break;
+     }
+   } else {
+     setSelectedBrand(method.brands?.[0] || '');
+     setActiveModal('sync-settings');
+   }
+ };
 
  return (
    <div className="space-y-6">
@@ -198,18 +233,20 @@ export function SyncCenterContent() {
                  )}
 
                  <div className="mt-4 flex gap-2">
-                   <Button>
-                     {method.type === 'import' ? <Upload className="h-4 w-4 mr-2" /> :
-                      method.type === 'sync' ? <RefreshCcw className="h-4 w-4 mr-2" /> :
-                      <Play className="h-4 w-4 mr-2" />}
-                     {method.type === 'import' ? 'Import' : 
-                      method.type === 'sync' ? 'Sync Now' : 
-                      'View Details'}
-                   </Button>
-                   <Button variant="outline">
-                     <Settings className="h-4 w-4 mr-2" />
-                     Settings
-                   </Button>
+                 <Button onClick={() => handleAction(method, 'start')}>
+                    {method.type === 'import' ? (
+                      <Upload className="h-4 w-4 mr-2" />
+                    ) : method.type === 'sync' ? (
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Play className="h-4 w-4 mr-2" />
+                    )}
+                    {method.type === 'import' ? 'Import' : method.type === 'sync' ? 'Sync Now' : 'View Details'}
+                    </Button>
+                    <Button variant="outline" onClick={() => handleAction(method, 'settings')}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                    </Button>
                  </div>
                </CardContent>
              </Card>
@@ -246,7 +283,18 @@ export function SyncCenterContent() {
                        <StatusBadge status={item.status} />
                      </TableCell>
                      <TableCell>
-                       <Button variant="ghost" size="sm">View Details</Button>
+                       
+                       <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedActivity(item);
+                            setModals({...modals, activityDetails: true});
+                          }}
+                          >
+                          View Details
+                          </Button>
+                       
                      </TableCell>
                    </TableRow>
                  ))}
@@ -293,7 +341,12 @@ export function SyncCenterContent() {
                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
                    <p className="mt-2">Drag & drop your CSV/Excel file or click to browse</p>
                  </div>
-                 <Button className="mt-4 w-full">Start Import</Button>
+                 <Button 
+                  className="mt-4 w-full"
+                  onClick={() => setModals({...modals, quickImport: true})}
+                  >
+                  Start Import
+                  </Button>
                </CardContent>
              </Card>
 
@@ -316,10 +369,13 @@ export function SyncCenterContent() {
                      <Download className="h-4 w-4 mr-2" />
                      Download Template
                    </Button>
-                   <Button className="flex-1">
-                     <Upload className="h-4 w-4 mr-2" />
-                     Upload Filled Template
-                   </Button>
+                   <Button 
+                      className="flex-1" 
+                      onClick={() => setModals({...modals, importProgress: true})}
+                      >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Filled Template
+                      </Button>
                  </div>
                </CardContent>
              </Card>
@@ -409,8 +465,22 @@ export function SyncCenterContent() {
                      <p className="text-sm">Last Success: {brand.lastSuccess.toLocaleString()}</p>
                    </div>
                    <div className="mt-4 flex gap-2">
-                     <Button>Sync Now</Button>
-                     <Button variant="outline">Configure</Button>
+                   <Button onClick={() => {
+                      setSelectedBrand(brand.brand);
+                      setModals({...modals, brandSync: true});
+                      }}>
+                      Sync Now
+                      </Button>
+
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedBrand(brand.brand);
+                          setActiveModal('sync-settings');
+                        }}
+                        >
+                        Configure
+                        </Button>
                    </div>
                  </CardContent>
                </Card>
@@ -514,9 +584,17 @@ export function SyncCenterContent() {
                            <p className="text-red-500">Errors: {item.errors}</p>
                          )}
                        </div>
-                       <Button variant="ghost" size="sm" className="mt-2">
-                         View Details
-                       </Button>
+                       <Button 
+ variant="ghost" 
+ size="sm" 
+ className="mt-2"
+ onClick={() => {
+   setSelectedActivity(item);
+   setModals({...modals, activityDetails: true});
+ }}
+>
+ View Details
+</Button>
                      </div>
                      </div>
                  ))}
@@ -546,6 +624,38 @@ export function SyncCenterContent() {
          </Card>
        </TabsContent>
      </Tabs>
+     <QuickImportModal 
+        isOpen={activeModal === 'quick-import'} 
+        onClose={() => setActiveModal(null)} 
+      />
+      
+      <SyncSettingsModal
+        isOpen={activeModal === 'sync-settings'}
+        onClose={() => setActiveModal(null)}
+        brand={selectedBrand}
+      />
+      <BrandSyncModal 
+    isOpen={modals.brandSync}
+    onClose={() => setModals({...modals, brandSync: false})}
+    brand="Swarovski"
+  />
+  
+  <ScanDetailsModal
+    isOpen={modals.scanDetails} 
+    onClose={() => setModals({...modals, scanDetails: false})}
+  />
+  
+  <ActivityDetailsModal
+    isOpen={modals.activityDetails}
+    onClose={() => setModals({...modals, activityDetails: false})}
+    activity={selectedActivity}
+  />
+  
+  <ImportProgressModal
+    isOpen={modals.importProgress}
+    onClose={() => setModals({...modals, importProgress: false})}
+    progress={importProgress}
+  />
    </div>
  );
 }
