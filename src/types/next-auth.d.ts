@@ -6,7 +6,6 @@ declare module "next-auth" {
         id: string;
         role: "ADMIN" | "MANAGER" | "USER" | "ACCOUNTANT";
         clientId: string;
-        warehouseId?: string;
         supabaseId: string;
         email: string;
         name: string;
@@ -17,7 +16,6 @@ declare module "next-auth" {
             id: string;
             role: "ADMIN" | "MANAGER" | "USER" | "ACCOUNTANT";
             clientId: string;
-            warehouseId?: string;
             supabaseId: string;
             email: string;
             name: string;
@@ -30,7 +28,6 @@ declare module "next-auth/jwt" {
         id: string;
         role: "ADMIN" | "MANAGER" | "USER" | "ACCOUNTANT";
         clientId: string;
-        warehouseId?: string;
         supabaseId: string;
         email: string;
         name: string;
