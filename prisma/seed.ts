@@ -38,16 +38,10 @@ async function clearExistingData() {
   console.log('Clearing existing data...')
   
   // Delete in correct order due to foreign key constraints
-  await prisma.operationItem.deleteMany({})
-  await prisma.operation.deleteMany({})
   await prisma.transaction.deleteMany({})
-  await prisma.inventoryItem.deleteMany({})
-  await prisma.batch.deleteMany({})
   await prisma.vendor.deleteMany({})
   await prisma.account.deleteMany({})
   await prisma.user.deleteMany({})
-  await prisma.product.deleteMany({})
-  await prisma.warehouse.deleteMany({})
   await prisma.client.deleteMany({})
   
   console.log('Existing data cleared')
