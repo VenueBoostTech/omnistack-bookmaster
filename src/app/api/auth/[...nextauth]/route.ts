@@ -9,7 +9,6 @@ import bcrypt from 'bcrypt'
 interface ExtendedUser extends User {
     role?: string;
     clientId: string;
-    warehouseId?: string;
     supabaseId: string;
     name: string;
 }
@@ -71,7 +70,6 @@ export const authOptions: NextAuthOptions = {
                     name: user.name,
                     role: user.role,
                     clientId: user.clientId,
-                    warehouseId: user.warehouseId || undefined,
                     supabaseId: user.supabaseId,
                     image: null
                 }
@@ -84,7 +82,6 @@ export const authOptions: NextAuthOptions = {
                 token.role = user.role as "ADMIN" | "MANAGER" | "USER" | "ACCOUNTANT"
                 token.id = user.id
                 token.clientId = user.clientId
-                token.warehouseId = user.warehouseId
                 token.supabaseId = user.supabaseId
                 token.name = user.name
             }
@@ -95,7 +92,6 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role
                 session.user.id = token.id
                 session.user.clientId = token.clientId
-                session.user.warehouseId = token.warehouseId
                 session.user.supabaseId = token.supabaseId
                 session.user.name = token.name
             }
