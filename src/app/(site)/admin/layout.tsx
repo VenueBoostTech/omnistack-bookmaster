@@ -4,6 +4,7 @@ import { useState } from "react"
 import Sidebar from "@/components/dashboard/sidebar"
 import Header from "@/components/dashboard/header"
 import getSidebarDataForType from "@/utils/getSidebarDataForType"
+import { Toaster } from 'react-hot-toast';
 
 // src/app/(site)/admin/layout.tsx
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
@@ -39,7 +40,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         <Header openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
         <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6 dark:bg-gray-900">
           {children}
+          <Toaster toastOptions={{ className: 'z-[999999]' }} />
         </div>
+
       </main>
 
       {/* Overlay */}
@@ -49,6 +52,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           onClick={() => setOpenSidebar(false)}
         ></div>
       )}
+
     </div>
   )
 }
