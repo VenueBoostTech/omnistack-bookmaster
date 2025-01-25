@@ -16,13 +16,12 @@ import {
  Download,
  Settings,
  History,
- Play,
  CheckCircle,
  XCircle
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { SyncSettingsModal } from './modals/sync-settings-modal'
-import { QuickImportModal } from './modals/quick-import-modal'
+import { ImportModal } from './modals/import-modal'
 import { ImportProgressModal } from './modals/import-progress-modal'
 import { ScanDetailsModal } from './modals/scan-details-modal'
 import { BrandSyncModal } from './modals/brand-sync-modal'
@@ -38,6 +37,14 @@ interface SyncMethod {
  progress?: number;
  type: 'import' | 'sync' | 'scan';
  brands?: string[];
+}
+
+interface ProgressData {
+  processed: number;
+  total: number;
+  successful: number;
+  failed: number;
+  percentage: number;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -148,32 +155,62 @@ export function SyncCenterContent() {
  const [activeModal, setActiveModal] = useState<string | null>(null);
  const [selectedBrand, setSelectedBrand] = useState<string>('');
 
- const [modals, setModals] = useState({
+const [modalState, setModalState] = useState({
+  quickImport: false,
+  syncSettings: false,
   brandSync: false,
   scanDetails: false,
   activityDetails: false,
   importProgress: false
 });
 
+const [importType, setImportType] = useState<'quick' | 'advanced'>('quick');
 const [selectedActivity, setSelectedActivity] = useState(null);
-const [importProgress, setImportProgress] = useState(null);
+const [importProgress, setImportProgress] = useState<ProgressData | null>(null);
+
+const MethodActions = ({ method }: { method: SyncMethod }) => {
+  switch(method.type) {
+    case 'import':
+      case 'import':
+     return (
+       <Button onClick={() => {
+         setImportType(method.id === 'basic-import' ? 'quick' : 'advanced');
+         setModalState(prev => ({...prev, quickImport: true}));
+       }}>
+         <Upload className="h-4 w-4 mr-2" />
+         Import
+       </Button>
+     )
+    case 'sync':
+      return (
+        <div className="flex gap-2">
+          <Button onClick={() => {
+            setSelectedBrand('all')
+            setModalState({...modalState, brandSync: true})
+          }}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Sync All Brands
+          </Button>
+          <Button variant="outline" onClick={() => {
+            setSelectedBrand('all')
+            setModalState({...modalState, syncSettings: true})
+          }}>
+            <Settings className="h-4 w-4 mr-2" />
+            Configure
+          </Button>
+        </div>
+      )
+    case 'scan':
+      return (
+        <Button onClick={() => setModalState({...modalState, scanDetails: true})}>
+          <Scan className="h-4 w-4 mr-2" />
+          View Scan Details
+        </Button>
+      )
+  }
+}
 
 
- const handleAction = (method: SyncMethod, action: 'start' | 'settings') => {
-   if (action === 'start') {
-     switch (method.type) {
-       case 'import':
-         setActiveModal('quick-import');
-         break;
-       case 'sync':
-         setActiveModal('sync-confirm');
-         break;
-     }
-   } else {
-     setSelectedBrand(method.brands?.[0] || '');
-     setActiveModal('sync-settings');
-   }
- };
 
  return (
    <div className="space-y-6">
@@ -232,21 +269,8 @@ const [importProgress, setImportProgress] = useState(null);
                    </p>
                  )}
 
-                 <div className="mt-4 flex gap-2">
-                 <Button onClick={() => handleAction(method, 'start')}>
-                    {method.type === 'import' ? (
-                      <Upload className="h-4 w-4 mr-2" />
-                    ) : method.type === 'sync' ? (
-                      <RefreshCcw className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    {method.type === 'import' ? 'Import' : method.type === 'sync' ? 'Sync Now' : 'View Details'}
-                    </Button>
-                    <Button variant="outline" onClick={() => handleAction(method, 'settings')}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                    </Button>
+                <div className="mt-4">
+                   <MethodActions method={method} />
                  </div>
                </CardContent>
              </Card>
@@ -284,16 +308,22 @@ const [importProgress, setImportProgress] = useState(null);
                      </TableCell>
                      <TableCell>
                        
-                       <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedActivity(item);
-                            setModals({...modals, activityDetails: true});
-                          }}
-                          >
-                          View Details
-                          </Button>
+                     <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setImportProgress({
+                          processed: item.productsCount - item.errors,
+                          total: item.productsCount,
+                          successful: item.productsCount - item.errors,
+                          failed: item.errors,
+                          percentage: Math.round(((item.productsCount - item.errors) / item.productsCount) * 100),
+                        });
+                        setModalState((prev) => ({ ...prev, importProgress: true }));
+                      }}
+                    >
+                      View Details
+                    </Button>
                        
                      </TableCell>
                    </TableRow>
@@ -342,10 +372,8 @@ const [importProgress, setImportProgress] = useState(null);
                    <p className="mt-2">Drag & drop your CSV/Excel file or click to browse</p>
                  </div>
                  <Button 
-                  className="mt-4 w-full"
-                  onClick={() => setModals({...modals, quickImport: true})}
-                  >
-                  Start Import
+                    className="mt-4 w-full">
+                    Start Import
                   </Button>
                </CardContent>
              </Card>
@@ -369,10 +397,7 @@ const [importProgress, setImportProgress] = useState(null);
                      <Download className="h-4 w-4 mr-2" />
                      Download Template
                    </Button>
-                   <Button 
-                      className="flex-1" 
-                      onClick={() => setModals({...modals, importProgress: true})}
-                      >
+                   <Button className="flex-1">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Filled Template
                       </Button>
@@ -417,28 +442,28 @@ const [importProgress, setImportProgress] = useState(null);
                  </TableBody>
                </Table>
                <div className="mt-4 border-t pt-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select className="h-8 w-16 rounded-md border border-input bg-background">
-              <option>5</option>
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page 1 of 3
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
-          <Button variant="outline" size="sm">Next</Button>
-        </div>
-      </div>
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium">Rows per page</p>
+                      <select className="h-8 w-16 rounded-md border border-input bg-background">
+                        <option>5</option>
+                        <option>10</option>
+                        <option>20</option>
+                        <option>50</option>
+                      </select>
+                    </div>
+                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                      Page 1 of 3
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" disabled>Previous</Button>
+                    <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
+                    <Button variant="outline" size="sm">2</Button>
+                    <Button variant="outline" size="sm">3</Button>
+                    <Button variant="outline" size="sm">Next</Button>
+                  </div>
+                </div>
              </CardContent>
            </Card>
            </div>
@@ -467,7 +492,7 @@ const [importProgress, setImportProgress] = useState(null);
                    <div className="mt-4 flex gap-2">
                    <Button onClick={() => {
                       setSelectedBrand(brand.brand);
-                      setModals({...modals, brandSync: true});
+                      setModalState({...modalState, brandSync: true});
                       }}>
                       Sync Now
                       </Button>
@@ -520,29 +545,29 @@ const [importProgress, setImportProgress] = useState(null);
                </Table>
                
              </CardContent>
-             <div className="mt-4 border-t pt-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select className="h-8 w-16 rounded-md border border-input bg-background">
-              <option>5</option>
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page 1 of 3
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
-          <Button variant="outline" size="sm">Next</Button>
-        </div>
-      </div>
+              <div className="mt-4 border-t pt-4 flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium">Rows per page</p>
+                    <select className="h-8 w-16 rounded-md border border-input bg-background">
+                      <option>5</option>
+                      <option>10</option>
+                      <option>20</option>
+                      <option>50</option>
+                    </select>
+                  </div>
+                  <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                    Page 1 of 3
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled>Previous</Button>
+                  <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
+                  <Button variant="outline" size="sm">2</Button>
+                  <Button variant="outline" size="sm">3</Button>
+                  <Button variant="outline" size="sm">Next</Button>
+                </div>
+                </div>
            </Card>
            </div>
          </div>
@@ -585,16 +610,15 @@ const [importProgress, setImportProgress] = useState(null);
                          )}
                        </div>
                        <Button 
- variant="ghost" 
- size="sm" 
- className="mt-2"
- onClick={() => {
-   setSelectedActivity(item);
-   setModals({...modals, activityDetails: true});
- }}
->
- View Details
-</Button>
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedActivity(item);
+                          setModalState(prev => ({...prev, activityDetails: true}));
+                        }}
+                      >
+                        View Details
+                      </Button>
                      </div>
                      </div>
                  ))}
@@ -624,38 +648,39 @@ const [importProgress, setImportProgress] = useState(null);
          </Card>
        </TabsContent>
      </Tabs>
-     <QuickImportModal 
-        isOpen={activeModal === 'quick-import'} 
-        onClose={() => setActiveModal(null)} 
+      <ImportModal 
+        isOpen={modalState.quickImport}
+        onClose={() => setModalState(prev => ({...prev, quickImport: false}))}
+        type={importType}
       />
-      
+        
       <SyncSettingsModal
         isOpen={activeModal === 'sync-settings'}
         onClose={() => setActiveModal(null)}
         brand={selectedBrand}
       />
       <BrandSyncModal 
-    isOpen={modals.brandSync}
-    onClose={() => setModals({...modals, brandSync: false})}
-    brand="Swarovski"
-  />
-  
-  <ScanDetailsModal
-    isOpen={modals.scanDetails} 
-    onClose={() => setModals({...modals, scanDetails: false})}
-  />
-  
-  <ActivityDetailsModal
-    isOpen={modals.activityDetails}
-    onClose={() => setModals({...modals, activityDetails: false})}
-    activity={selectedActivity}
-  />
-  
-  <ImportProgressModal
-    isOpen={modals.importProgress}
-    onClose={() => setModals({...modals, importProgress: false})}
-    progress={importProgress}
-  />
+        isOpen={modalState.brandSync}
+        onClose={() => setModalState({...modalState, brandSync: false})}
+        brand="Swarovski"
+      />
+    
+      <ScanDetailsModal
+        isOpen={modalState.scanDetails} 
+        onClose={() => setModalState({...modalState, scanDetails: false})}
+      />
+    
+      <ActivityDetailsModal
+        isOpen={modalState.activityDetails}
+        onClose={() => setModalState({...modalState, activityDetails: false})}
+        activity={selectedActivity}
+      />
+      
+      <ImportProgressModal
+        isOpen={modalState.importProgress}
+        onClose={() => setModalState((prev) => ({ ...prev, importProgress: false }))}
+        progress={importProgress}
+      />
    </div>
  );
 }

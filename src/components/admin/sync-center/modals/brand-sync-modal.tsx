@@ -12,7 +12,7 @@ export function BrandSyncModal({ isOpen, onClose, brand }: { isOpen: boolean; on
             <DialogTitle>Sync {brand}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-muted/20 p-4 rounded-md">
+            <div className="bg-muted/20 p-0 rounded-md">
               <h4 className="font-medium">Last Sync Status</h4>
               <Progress value={65} className="my-2" />
               <p className="text-sm text-muted-foreground">3,421 products updated</p>
