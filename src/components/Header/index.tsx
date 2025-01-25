@@ -5,9 +5,18 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import logo from "@/../public/images/logo/logo.svg"
 import logoLight from "@/../public/images/logo/logo-light.svg"
+import { useState } from "react"
+import { useEffect } from "react"
 
 const Header = () => {
   const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
 
   return (
     <header className="fixed left-0 top-0 z-50 w-full bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 border-b border-gray-200 dark:border-gray-800">

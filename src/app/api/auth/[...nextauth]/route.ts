@@ -46,9 +46,6 @@ export const authOptions: NextAuthOptions = {
                     where: {
                         email: credentials.email
                     },
-                    include: {
-                        warehouse: true
-                    }
                 })
 
                 if (!user || !user.password) {

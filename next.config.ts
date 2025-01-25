@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     forceSwcTransforms: true,
+    webpackBuildWorker: false
   }
 };
 
