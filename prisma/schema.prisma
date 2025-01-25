@@ -98,6 +98,7 @@ model Transaction {
   sourceId      String?   // Reference to NestJS Operation
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  completedAt   DateTime
   currency      Currency   @default(USD)
   exchangeRate  Float?    // Store rate at transaction time
 
@@ -158,6 +159,7 @@ enum TransactionType {
 
 enum TransactionStatus {
   PENDING
+  COMPLETED
   POSTED
   VOIDED
 }
