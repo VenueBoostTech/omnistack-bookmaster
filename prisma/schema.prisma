@@ -41,6 +41,14 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
+enum VendorType {
+ MANUFACTURER
+ DISTRIBUTOR
+ WHOLESALER
+ OTHER
+}
+
+
 model Vendor {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   clientId      String    @db.ObjectId
@@ -52,6 +60,7 @@ model Vendor {
   phone         String?
   email         String?
   status        VendorStatus @default(ACTIVE)
+  type          VendorType @default(MANUFACTURER)
   accountId     String?   @db.ObjectId
   account       Account?  @relation(fields: [accountId], references: [id])
   balance       Float     @default(0)
@@ -89,8 +98,8 @@ model Transaction {
   date          DateTime
   type          TransactionType
   description   String?
-  accountId     String    @db.ObjectId
-  account       Account   @relation(fields: [accountId], references: [id])
+  accountId     String? @db.ObjectId
+  account       Account?   @relation(fields: [accountId], references: [id])
   debit         Float     @default(0)
   credit        Float     @default(0)
   status        TransactionStatus @default(PENDING)
@@ -98,6 +107,7 @@ model Transaction {
   sourceId      String?   // Reference to NestJS Operation
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  completedAt   DateTime?
   currency      Currency   @default(USD)
   exchangeRate  Float?    // Store rate at transaction time
 
@@ -158,6 +168,7 @@ enum TransactionType {
 
 enum TransactionStatus {
   PENDING
+  COMPLETED
   POSTED
   VOIDED
 }

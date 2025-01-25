@@ -1,10 +1,12 @@
-// api/product.ts
 import { omniGateway } from './index';
-import { CreateProductPayload, Product } from './types';
 
 export const productApi = {
- createProduct: async (product: CreateProductPayload): Promise<Product> => {
-   const { data } = await omniGateway.post('/products', product);
-   return data;
- }
+  getProducts: async (params: any) => {
+    const { data } = await omniGateway.get('/products', { params });
+    return data;
+  },
+  getCategories: async () => {
+    const { data } = await omniGateway.get('/products/categories');
+    return data;
+  }
 };
