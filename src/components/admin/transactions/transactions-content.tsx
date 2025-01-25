@@ -29,7 +29,7 @@ interface TransactionMetrics {
  todayDeposits: number;
  todayPayments: number;
  pendingCount: number;
- postedToday: number;
+ completedToday: number;
 }
 
 const TRANSACTION_TYPES = [
@@ -44,7 +44,7 @@ const TRANSACTION_TYPES = [
 
 const getStatusColor = (status: string) => {
  switch (status) {
-   case 'POSTED': return 'bg-green-100 text-green-800';
+   case 'COMPLETED': return 'bg-green-100 text-green-800';
    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
    case 'VOIDED': return 'bg-red-100 text-red-800';
    default: return 'bg-gray-100 text-gray-800';
@@ -75,7 +75,7 @@ export function TransactionsContent() {
    todayDeposits: 0,
    todayPayments: 0,
    pendingCount: 0,
-   postedToday: 0
+   completedToday: 0
  });
 
  const fetchTransactions = useCallback(async () => {
@@ -179,8 +179,8 @@ export function TransactionsContent() {
          <CardContent className="p-4">
            <div className="flex justify-between items-start">
              <div className="space-y-1">
-               <p className="text-sm text-muted-foreground">Posted Today</p>
-               <p className="text-2xl font-bold">{metrics.postedToday}</p>
+               <p className="text-sm text-muted-foreground">Completed Today</p>
+               <p className="text-2xl font-bold">{metrics.completedToday}</p>
              </div>
              <div className="p-2 bg-primary/10 rounded-lg">
                <Receipt className="h-5 w-5 text-primary" />

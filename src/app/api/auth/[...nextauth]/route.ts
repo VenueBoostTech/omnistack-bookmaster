@@ -106,7 +106,7 @@ export const authOptions: NextAuthOptions = {
                     date: new Date(),
                     description: `User ${user.email} signed in`,
                     accountId: user.clientId, // Using clientId as default account for system logs
-                    status: 'POSTED'
+                    status: 'COMPLETED'
                 }
             })
         }

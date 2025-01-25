@@ -169,7 +169,6 @@ enum TransactionType {
 enum TransactionStatus {
   PENDING
   COMPLETED
-  POSTED
   VOIDED
 }
 
