@@ -4,8 +4,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogTitle, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { FileUploadZone } from "../components/file-upload-zone";
 import { importApi } from '@/app/api/external/omnigateway/import';
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from 'react-hot-toast';
 import InputSelect from "@/components/Common/InputSelect";
+import axios from "axios";
 
 export function ImportModal({
  isOpen,
@@ -21,16 +22,11 @@ export function ImportModal({
  const [selectedBrand, setSelectedBrand] = useState('');
  const [updateExisting, setUpdateExisting] = useState(false);
  const [skipErrors, setSkipErrors] = useState(false);
- const { toast } = useToast();
 
  const handleImport = async () => {
     
    if (!file) {
-     toast({
-       title: "Error",
-       description: "Please select a file",
-       variant: "destructive",
-     });
+    toast.error('Please select a file')
      return;
    }
 
@@ -42,18 +38,16 @@ export function ImportModal({
        brandId: selectedBrand
      });
      
-     toast({
-       title: "Success",
-       description: "Import started successfully",
-     });
+     toast.success('Import started successfully');
      onClose();
    } catch (error) {
-     toast({
-       title: "Error",
-       description: "Failed to start import",
-       variant: "destructive",
-     });
-   } finally {
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.message || 'Failed to start import';
+      toast.error(errorMessage)
+    } else {
+      toast.error('An unexpected error occurred')
+    }
+   }finally {
      setIsLoading(false);
    }
  };
