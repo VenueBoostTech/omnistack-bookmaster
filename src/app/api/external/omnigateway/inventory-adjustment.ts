@@ -1,7 +1,7 @@
 import { omniGateway } from './index';
 import type { AdjustmentParams, CreateAdjustmentPayload } from './types';
 
-export const inventoryApi = {
+export const inventoryAdjustmentApi = {
   getAdjustments: async (params: AdjustmentParams) => {
     const { data } = await omniGateway.get('/inventory/adjustments', { params });
     return data;
