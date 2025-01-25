@@ -16,13 +16,12 @@ import {
  Download,
  Settings,
  History,
- Play,
  CheckCircle,
  XCircle
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { SyncSettingsModal } from './modals/sync-settings-modal'
-import { QuickImportModal } from './modals/quick-import-modal'
+import { ImportModal } from './modals/import-modal'
 import { ImportProgressModal } from './modals/import-progress-modal'
 import { ScanDetailsModal } from './modals/scan-details-modal'
 import { BrandSyncModal } from './modals/brand-sync-modal'
@@ -38,6 +37,14 @@ interface SyncMethod {
  progress?: number;
  type: 'import' | 'sync' | 'scan';
  brands?: string[];
+}
+
+interface ProgressData {
+  processed: number;
+  total: number;
+  successful: number;
+  failed: number;
+  percentage: number;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -157,19 +164,23 @@ const [modalState, setModalState] = useState({
   importProgress: false
 });
 
-
+const [importType, setImportType] = useState<'quick' | 'advanced'>('quick');
 const [selectedActivity, setSelectedActivity] = useState(null);
-const [importProgress, setImportProgress] = useState(null);
+const [importProgress, setImportProgress] = useState<ProgressData | null>(null);
 
 const MethodActions = ({ method }: { method: SyncMethod }) => {
   switch(method.type) {
     case 'import':
-      return (
-        <Button onClick={() => setModalState(prev => ({...prev, quickImport: true}))}>
-          <Upload className="h-4 w-4 mr-2" />
-          Import
-        </Button>
-      )
+      case 'import':
+     return (
+       <Button onClick={() => {
+         setImportType(method.id === 'basic-import' ? 'quick' : 'advanced');
+         setModalState(prev => ({...prev, quickImport: true}));
+       }}>
+         <Upload className="h-4 w-4 mr-2" />
+         Import
+       </Button>
+     )
     case 'sync':
       return (
         <div className="flex gap-2">
@@ -301,8 +312,14 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                       variant="ghost" 
                       size="sm"
                       onClick={() => {
-                        setSelectedActivity(item);
-                        setModalState(prev => ({...prev, activityDetails: true}));
+                        setImportProgress({
+                          processed: item.productsCount - item.errors,
+                          total: item.productsCount,
+                          successful: item.productsCount - item.errors,
+                          failed: item.errors,
+                          percentage: Math.round(((item.productsCount - item.errors) / item.productsCount) * 100),
+                        });
+                        setModalState((prev) => ({ ...prev, importProgress: true }));
                       }}
                     >
                       View Details
@@ -355,10 +372,8 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                    <p className="mt-2">Drag & drop your CSV/Excel file or click to browse</p>
                  </div>
                  <Button 
-                  className="mt-4 w-full"
-                  onClick={() => setModalState({...modalState, quickImport: true})}
-                  >
-                  Start Import
+                    className="mt-4 w-full">
+                    Start Import
                   </Button>
                </CardContent>
              </Card>
@@ -382,10 +397,7 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                      <Download className="h-4 w-4 mr-2" />
                      Download Template
                    </Button>
-                   <Button 
-                      className="flex-1" 
-                      onClick={() => setModalState({...setModalState, importProgress: true})}
-                      >
+                   <Button className="flex-1">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Filled Template
                       </Button>
@@ -430,28 +442,28 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                  </TableBody>
                </Table>
                <div className="mt-4 border-t pt-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select className="h-8 w-16 rounded-md border border-input bg-background">
-              <option>5</option>
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page 1 of 3
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
-          <Button variant="outline" size="sm">Next</Button>
-        </div>
-      </div>
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium">Rows per page</p>
+                      <select className="h-8 w-16 rounded-md border border-input bg-background">
+                        <option>5</option>
+                        <option>10</option>
+                        <option>20</option>
+                        <option>50</option>
+                      </select>
+                    </div>
+                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                      Page 1 of 3
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" disabled>Previous</Button>
+                    <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
+                    <Button variant="outline" size="sm">2</Button>
+                    <Button variant="outline" size="sm">3</Button>
+                    <Button variant="outline" size="sm">Next</Button>
+                  </div>
+                </div>
              </CardContent>
            </Card>
            </div>
@@ -533,29 +545,29 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                </Table>
                
              </CardContent>
-             <div className="mt-4 border-t pt-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select className="h-8 w-16 rounded-md border border-input bg-background">
-              <option>5</option>
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page 1 of 3
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
-          <Button variant="outline" size="sm">Next</Button>
-        </div>
-      </div>
+              <div className="mt-4 border-t pt-4 flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium">Rows per page</p>
+                    <select className="h-8 w-16 rounded-md border border-input bg-background">
+                      <option>5</option>
+                      <option>10</option>
+                      <option>20</option>
+                      <option>50</option>
+                    </select>
+                  </div>
+                  <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                    Page 1 of 3
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled>Previous</Button>
+                  <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
+                  <Button variant="outline" size="sm">2</Button>
+                  <Button variant="outline" size="sm">3</Button>
+                  <Button variant="outline" size="sm">Next</Button>
+                </div>
+                </div>
            </Card>
            </div>
          </div>
@@ -598,15 +610,15 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                          )}
                        </div>
                        <Button 
-  variant="ghost" 
-  size="sm"
-  onClick={() => {
-    setSelectedActivity(item);
-    setModalState(prev => ({...prev, activityDetails: true}));
-  }}
->
-  View Details
-</Button>
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedActivity(item);
+                          setModalState(prev => ({...prev, activityDetails: true}));
+                        }}
+                      >
+                        View Details
+                      </Button>
                      </div>
                      </div>
                  ))}
@@ -636,38 +648,39 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
          </Card>
        </TabsContent>
      </Tabs>
-     <QuickImportModal 
-      isOpen={modalState.quickImport}
-      onClose={() => setModalState(prev => ({...prev, quickImport: false}))}
-    />
-      
+      <ImportModal 
+        isOpen={modalState.quickImport}
+        onClose={() => setModalState(prev => ({...prev, quickImport: false}))}
+        type={importType}
+      />
+        
       <SyncSettingsModal
         isOpen={activeModal === 'sync-settings'}
         onClose={() => setActiveModal(null)}
         brand={selectedBrand}
       />
       <BrandSyncModal 
-    isOpen={modalState.brandSync}
-    onClose={() => setModalState({...modalState, brandSync: false})}
-    brand="Swarovski"
-  />
-  
-  <ScanDetailsModal
-    isOpen={modalState.scanDetails} 
-    onClose={() => setModalState({...modalState, scanDetails: false})}
-  />
-  
-  <ActivityDetailsModal
-    isOpen={modalState.activityDetails}
-    onClose={() => setModalState({...modalState, activityDetails: false})}
-    activity={selectedActivity}
-  />
-  
-  <ImportProgressModal
-    isOpen={modalState.importProgress}
-    onClose={() => setModalState({...modalState, importProgress: false})}
-    progress={importProgress}
-  />
+        isOpen={modalState.brandSync}
+        onClose={() => setModalState({...modalState, brandSync: false})}
+        brand="Swarovski"
+      />
+    
+      <ScanDetailsModal
+        isOpen={modalState.scanDetails} 
+        onClose={() => setModalState({...modalState, scanDetails: false})}
+      />
+    
+      <ActivityDetailsModal
+        isOpen={modalState.activityDetails}
+        onClose={() => setModalState({...modalState, activityDetails: false})}
+        activity={selectedActivity}
+      />
+      
+      <ImportProgressModal
+        isOpen={modalState.importProgress}
+        onClose={() => setModalState((prev) => ({ ...prev, importProgress: false }))}
+        progress={importProgress}
+      />
    </div>
  );
 }
