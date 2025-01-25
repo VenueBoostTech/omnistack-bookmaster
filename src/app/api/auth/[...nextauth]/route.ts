@@ -97,18 +97,7 @@ export const authOptions: NextAuthOptions = {
     },
     events: {
         async signIn({ user }) {
-            // Create transaction log for sign in
-            await prisma.transaction.create({
-                data: {
-                    clientId: user.clientId,
-                    type: 'ADJUSTMENT',
-                    number: `LOGIN-${Date.now()}`,
-                    date: new Date(),
-                    description: `User ${user.email} signed in`,
-                    accountId: user.clientId, // Using clientId as default account for system logs
-                    status: 'POSTED'
-                }
-            })
+            // do nothing
         }
     },
     debug: process.env.NODE_ENV === 'development',

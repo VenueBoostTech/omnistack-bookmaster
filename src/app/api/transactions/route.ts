@@ -70,7 +70,7 @@ async function getTransactionMetrics(clientId: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [deposits, payments, pending, posted] = await Promise.all([
+  const [deposits, payments, pending, completed] = await Promise.all([
     prisma.transaction.aggregate({
       where: {
         clientId,
@@ -96,7 +96,7 @@ async function getTransactionMetrics(clientId: string) {
     prisma.transaction.count({
       where: {
         clientId,
-        status: 'POSTED',
+        status: 'COMPLETED',
         date: { gte: today }
       }
     })
@@ -106,6 +106,6 @@ async function getTransactionMetrics(clientId: string) {
     todayDeposits: deposits._sum.debit || 0,
     todayPayments: payments._sum.credit || 0,
     pendingCount: pending,
-    postedToday: posted
+    completedToday: completed
   };
 }
