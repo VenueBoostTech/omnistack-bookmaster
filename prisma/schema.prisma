@@ -41,6 +41,14 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
+enum VendorType {
+ MANUFACTURER
+ DISTRIBUTOR
+ WHOLESALER
+ OTHER
+}
+
+
 model Vendor {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   clientId      String    @db.ObjectId
@@ -52,6 +60,7 @@ model Vendor {
   phone         String?
   email         String?
   status        VendorStatus @default(ACTIVE)
+  type          VendorType @default(MANUFACTURER)
   accountId     String?   @db.ObjectId
   account       Account?  @relation(fields: [accountId], references: [id])
   balance       Float     @default(0)

@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
+import { generateVendorCode } from '@/lib/utils';
   
 export async function GET(request: Request) {
  const { searchParams } = new URL(request.url);
@@ -177,3 +178,51 @@ async function getVendorMetrics(clientId: string) {
       
     };
    }
+
+
+   export async function POST(request: Request) {
+    try {
+      const body = await request.json();
+      console.log('Request body:', body);
+  
+      // Check email uniqueness
+      if (body.email) {
+        const existingVendor = await prisma.vendor.findFirst({
+          where: { 
+            clientId: body.clientId,
+            email: body.email 
+          }
+        });
+        console.log('Existing vendor check:', existingVendor);
+      }
+  
+      const vendorCode = await generateVendorCode();
+      console.log('Generated code:', vendorCode);
+  
+      const vendor = await prisma.vendor.create({
+        data: {
+          ...body,
+          code: vendorCode
+        }
+      });
+      console.log('Created vendor:', vendor);
+  
+      return NextResponse.json(vendor);
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to create vendor' }, { status: 500 });
+    }
+  }
+   
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+ try {
+    await prisma.vendor.delete({
+    where: { id }
+    });
+    return NextResponse.json({ success: true });
+ } catch {
+    return NextResponse.json({ error: 'Failed to delete vendor' }, { status: 500 }); 
+ }
+}

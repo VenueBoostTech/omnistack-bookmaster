@@ -26,6 +26,7 @@ import {
  History,
  FileText,
  MapPin,
+ Trash2,
 } from "lucide-react";
 import {
  DropdownMenu,
@@ -36,6 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'react-hot-toast';
 import { useClient } from '@/hooks/useClient';
+import { AddVendorModal } from './modals/add-vendor-modal';
+import { DeleteVendorModal } from './modals/delete-vendor-modal';
 
 interface Vendor {
   id: string;
@@ -43,11 +46,9 @@ interface Vendor {
   type: string;
   status: string;
   rating: number;
-  contact: {
-    email: string;
-    phone: string;
-    address: string;
-  };
+  email: string;
+  phone: string;
+  address: string;
   performance: {
     onTimeDelivery: number;
     qualityRating: number;
@@ -145,6 +146,21 @@ const fetchVendors = useCallback(async () => {
   }
 }, [clientId, page, pageSize, filters]);
 
+
+const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+const handleDelete = async () => {
+  try {
+    await fetch(`/api/vendors?id=${selectedVendor?.id}`, { method: 'DELETE' });
+    toast.success('Vendor deleted');
+    fetchVendors();
+  } catch {
+    toast.error('Failed to delete vendor');
+  }
+  setShowDeleteModal(false);
+};
+
  const handleSearch = debounce((value: string) => {
    setFilters(prev => ({ ...prev, search: value }));
    setPage(1);
@@ -171,6 +187,9 @@ const fetchVendors = useCallback(async () => {
   averageLeadTimeChange: 0,
   averageLeadTimeTrend: 'up'
 });
+
+
+const [showAddModal, setShowAddModal] = useState(false);
 
 
 const METRIC_CARDS = [
@@ -223,10 +242,10 @@ const METRIC_CARDS = [
            <FileSpreadsheet className="h-4 w-4 mr-2" />
            Export
          </Button>
-         <Button style={{ backgroundColor: "#5FC4D0" }}>
-           <Plus className="h-4 w-4 mr-2" />
-           Add Vendor
-         </Button>
+         <Button onClick={() => setShowAddModal(true)} style={{ backgroundColor: "#5FC4D0" }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Vendor
+        </Button>
        </div>
      </div>
 
@@ -292,9 +311,10 @@ const METRIC_CARDS = [
                onChange={(e) => handleFilterChange('type', e.target.value)}
                options={[
                  { value: "all", label: "All Types" },
-                 { value: "manufacturer", label: "Manufacturer" },
-                 { value: "distributor", label: "Distributor" },
-                 { value: "wholesaler", label: "Wholesaler" }
+                 { value: "MANUFACTURER", label: "Manufacturer" },
+                 { value: "DISTRIBUTOR", label: "Distributor" },
+                 { value: "WHOLESALER", label: "Wholesaler" },
+                 { value: "OTHER", label: "Other" }
                ]}
              />
              <InputSelect
@@ -351,15 +371,15 @@ const METRIC_CARDS = [
                      <div className="flex flex-col gap-1 mt-2">
                        <div className="flex items-center text-sm">
                          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                         {vendor.contact.email}
+                         {vendor.email}
                        </div>
                        <div className="flex items-center text-sm">
                          <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                         {vendor.contact.phone}
+                         {vendor.phone}
                        </div>
                        <div className="flex items-center text-sm">
                          <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                         {vendor.contact.address}
+                         {vendor.address}
                        </div>
                      </div>
                    </div>
@@ -383,6 +403,13 @@ const METRIC_CARDS = [
                          <FileText className="h-4 w-4 mr-2" />
                          View Documents
                        </DropdownMenuItem>
+                       <DropdownMenuItem onClick={() => {
+                          setSelectedVendor(vendor);
+                          setShowDeleteModal(true);
+                        }}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
                      </DropdownMenuContent>
                    </DropdownMenu>
                  </div>
@@ -394,23 +421,23 @@ const METRIC_CARDS = [
                    <div>
                      <div className="flex justify-between text-sm mb-1">
                        <span className="text-muted-foreground">On-Time Delivery</span>
-                       <span className="font-medium">{vendor.performance.onTimeDelivery}%</span>
+                       <span className="font-medium">{vendor.performance?.onTimeDelivery}%</span>
                      </div>
-                     <Progress value={vendor.performance.onTimeDelivery} className="h-2" />
+                     <Progress value={vendor.performance?.onTimeDelivery} className="h-2" />
                    </div>
                    <div>
                      <div className="flex justify-between text-sm mb-1">
                        <span className="text-muted-foreground">Quality Rating</span>
-                       <span className="font-medium">{vendor.performance.qualityRating}%</span>
+                       <span className="font-medium">{vendor.performance?.qualityRating}%</span>
                      </div>
-                     <Progress value={vendor.performance.qualityRating} className="h-2" />
+                     <Progress value={vendor.performance?.qualityRating} className="h-2" />
                    </div>
                    <div>
                      <div className="flex justify-between text-sm mb-1">
                        <span className="text-muted-foreground">Response Time</span>
-                       <span className="font-medium">{vendor.performance.responseTime}%</span>
+                       <span className="font-medium">{vendor.performance?.responseTime}%</span>
                      </div>
-                     <Progress value={vendor.performance.responseTime} className="h-2" />
+                     <Progress value={vendor.performance?.responseTime} className="h-2" />
                    </div>
                  </div>
                </div>
@@ -421,15 +448,15 @@ const METRIC_CARDS = [
                    <div>
                      <p className="text-sm text-muted-foreground">Total Spent</p>
                      <p className="text-lg font-semibold mt-1">
-                       €{vendor.financials.totalSpent.toLocaleString()}
+                       €{vendor.financials?.totalSpent.toLocaleString()}
                      </p>
                    </div>
                    <div>
                      <p className="text-sm text-muted-foreground">Outstanding</p>
                      <p className={`text-sm font-medium mt-1 ${
-                       vendor.financials.outstandingPayments > 0 ? 'text-yellow-600' : 'text-green-600'
+                       vendor.financials?.outstandingPayments > 0 ? 'text-yellow-600' : 'text-green-600'
                      }`}>
-                       €{vendor.financials.outstandingPayments.toLocaleString()}
+                       €{vendor.financials?.outstandingPayments.toLocaleString()}
                      </p>
                    </div>
                    <div className="flex justify-between items-center">
@@ -509,6 +536,18 @@ const METRIC_CARDS = [
          </Button>
        </div>
      </div>
+     <AddVendorModal 
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchVendors}
+      />
+
+      <DeleteVendorModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        vendorName={selectedVendor?.name || ''}
+      />
    </div>
  );
 }
