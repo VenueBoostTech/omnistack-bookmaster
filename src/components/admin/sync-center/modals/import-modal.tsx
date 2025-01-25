@@ -44,7 +44,7 @@ export function ImportModal({
                   {type === 'advanced' && (
                     <> <h4 className="font-medium mb-0">Choose template</h4>
                     <InputSelect
-                      name="warehouse"
+                      name="template"
                       label=""
                       value={selectedTemplate}
                       onChange={(e) => setSelectedTemplate(e.target.value)}

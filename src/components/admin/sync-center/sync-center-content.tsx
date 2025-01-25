@@ -14,13 +14,12 @@ import {
  FileSpreadsheet,
  Upload,
  Download,
- Settings,
  History,
  CheckCircle,
  XCircle
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { SyncSettingsModal } from './modals/sync-settings-modal'
+import { BrandSyncSettingsModal } from './modals/brand-sync-settings-modal'
 import { ImportModal } from './modals/import-modal'
 import { ImportProgressModal } from './modals/import-progress-modal'
 import { ScanDetailsModal } from './modals/scan-details-modal'
@@ -540,61 +539,72 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
 
            {/* Sync schedule */}
            <div className='p-4'>
-           <Card>
-             <CardHeader>
-               <CardTitle>Sync Schedule</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <Table>
-                 <TableHeader>
-                   <TableRow>
-                     <TableHead>Brand</TableHead>
-                     <TableHead>Frequency</TableHead>
-                     <TableHead>Next Run</TableHead>
-                     <TableHead>Last Success</TableHead>
-                     <TableHead>Status</TableHead>
-                   </TableRow>
-                 </TableHeader>
-                 <TableBody>
-                   {syncSchedule.map(schedule => (
-                     <TableRow key={schedule.brand}>
-                       <TableCell>{schedule.brand}</TableCell>
-                       <TableCell>{schedule.frequency}</TableCell>
-                       <TableCell>{schedule.nextRun.toLocaleString()}</TableCell>
-                       <TableCell>{schedule.lastSuccess.toLocaleString()}</TableCell>
-                       <TableCell>
-                         <StatusBadge status={schedule.status} />
-                       </TableCell>
-                     </TableRow>
-                   ))}
-                 </TableBody>
-               </Table>
-               
-             </CardContent>
-              <div className="mt-4 border-t pt-4 flex items-center justify-between">
-                <div className="flex items-center space-x-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sync Schedule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Brand</TableHead>
+                        <TableHead>Frequency</TableHead>
+                        <TableHead>Next Run</TableHead>
+                        <TableHead>Last Success</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {syncSchedule.map((schedule) => (
+                        <TableRow key={schedule.brand}>
+                          <TableCell>{schedule.brand}</TableCell>
+                          <TableCell>{schedule.frequency}</TableCell>
+                          <TableCell>{schedule.nextRun.toLocaleString()}</TableCell>
+                          <TableCell>{schedule.lastSuccess.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <StatusBadge status={schedule.status} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="mt-4 border-t pt-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium">Rows per page</p>
+                      <select className="h-8 w-16 rounded-md border border-input bg-background">
+                        <option>5</option>
+                        <option>10</option>
+                        <option>20</option>
+                        <option>50</option>
+                      </select>
+                    </div>
+                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                      Page 1 of 3
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium">Rows per page</p>
-                    <select className="h-8 w-16 rounded-md border border-input bg-background">
-                      <option>5</option>
-                      <option>10</option>
-                      <option>20</option>
-                      <option>50</option>
-                    </select>
+                    <Button variant="outline" size="sm" disabled>
+                      Previous
+                    </Button>
+                    <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">
+                      1
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      2
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      3
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Next
+                    </Button>
                   </div>
-                  <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                    Page 1 of 3
-                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" disabled>Previous</Button>
-                  <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-                  <Button variant="outline" size="sm">2</Button>
-                  <Button variant="outline" size="sm">3</Button>
-                  <Button variant="outline" size="sm">Next</Button>
-                </div>
-                </div>
-           </Card>
+              </CardContent>
+            </Card>
            </div>
          </div>
        </TabsContent>
@@ -680,7 +690,7 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
         type={importType}
       />
         
-      <SyncSettingsModal
+      <BrandSyncSettingsModal
         isOpen={activeModal === 'sync-settings'}
         onClose={() => setActiveModal(null)}
         brand={selectedBrand}

@@ -1,12 +1,13 @@
+// src/components/admin/sync-center/modals/brand-sync-settings-modal.tsx
+import InputSelect from "@/components/Common/InputSelect";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogTitle, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem } from "@/components/ui/select";
-// src/components/admin/sync-center/modals/sync-settings-modal.tsx
-// src/components/admin/sync-center/modals/sync-settings-modal.tsx
-export function SyncSettingsModal({
+import { useState } from "react";
+
+export function BrandSyncSettingsModal({
     isOpen,
     onClose,
     brand
@@ -15,6 +16,8 @@ export function SyncSettingsModal({
     onClose: () => void;
     brand: string;
   }) {
+
+    const [selectedFrequency, setSelectedFrequency] = useState('daily');
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
@@ -24,17 +27,21 @@ export function SyncSettingsModal({
           <div className="space-y-4">
             <div>
               <Label>Sync Frequency</Label>
-              <Select>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="manual">Manual</SelectItem>
-                </SelectContent>
-              </Select>
+              <InputSelect
+                name="frequency"
+                label=""
+                value={selectedFrequency}
+                onChange={(e) => setSelectedFrequency(e.target.value)}
+                options={[
+                  { value: "daily", label: "Daily" },
+                  { value: "weekly", label: "Weekly" },
+                  { value: "manual", label: "Manual" }
+                ]}
+              />
             </div>
             <div>
-              <Label>Sync Time</Label>
-              <Input type="time" />
+              <Label >Sync Time</Label>
+              <Input className="mt-2 mb-8" type="time" />
             </div>
             <Checkbox label="Auto-update existing products" />
             <Checkbox label="Notify on completion" />
