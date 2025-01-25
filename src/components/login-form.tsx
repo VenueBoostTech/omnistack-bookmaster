@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,14 @@ export function LoginForm() {
     const [error, setError] = useState<string>("")
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+    setMounted(true)
+    }, [])
+
+    if (!mounted) return null
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setError("")
@@ -31,6 +39,7 @@ export function LoginForm() {
             })
 
             if (result?.error) {
+                console.log('Sign in error:', result.error)
                 setError("Invalid credentials")
                 return
             }
