@@ -191,13 +191,6 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
             <RefreshCcw className="h-4 w-4 mr-2" />
             Sync All Brands
           </Button>
-          <Button variant="outline" onClick={() => {
-            setSelectedBrand('all')
-            setModalState({...modalState, syncSettings: true})
-          }}>
-            <Settings className="h-4 w-4 mr-2" />
-            Configure
-          </Button>
         </div>
       )
     case 'scan':
@@ -357,91 +350,114 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
       </div>
          </div>
        </TabsContent>
-
        <TabsContent value="imports">
-         <div className="space-y-6">
-           {/* Import templates section */}
-           <div className="grid p-4 gap-4 md:grid-cols-2">
-             <Card shadow='md'>
-               <CardHeader>
-                 <CardTitle>Quick Import</CardTitle>
-               </CardHeader>
-               <CardContent>
-                 <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                   <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                   <p className="mt-2">Drag & drop your CSV/Excel file or click to browse</p>
-                 </div>
-                 <Button 
-                    className="mt-4 w-full">
-                    Start Import
+        <div className="space-y-6">
+          {/* Import templates section */}
+          <div className="grid p-4 gap-4 md:grid-cols-2">
+            <Card shadow="md">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <div className="flex items-center mr-2 gap-2">
+                    <ArrowDownToLine className="h-5 w-5" />
+                    Quick Import
+                  </div>
+                  <StatusBadge status="active" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Import products with essential fields (code, barcode, name)
+                </p>
+                <div className="border-2 border-dashed rounded-lg p-8 text-center mt-4">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <p className="mt-2">Drag & drop your CSV/Excel file or click to browse</p>
+                </div>
+                <Button className="mt-4 w-full">Start Import</Button>
+              </CardContent>
+            </Card>
+
+            <Card shadow="md">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <div className="flex items-center mr-2 gap-2">
+                    <FileSpreadsheet className="h-5 w-5" />
+                    Advanced Import
+                  </div>
+                  <StatusBadge status="active" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Use templates for structured imports with variations
+                </p>
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="w-full p-2 border rounded-md mt-4"
+                >
+                  <option value="simple">Simple Products</option>
+                  <option value="variations">Products with Variations</option>
+                  <option value="full">Full Product Details</option>
+                </select>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Template
                   </Button>
-               </CardContent>
-             </Card>
+                  <Button className="flex-1">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Filled Template
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-             <Card shadow='md'>
-               <CardHeader>
-                 <CardTitle>Template Import</CardTitle>
-               </CardHeader>
-               <CardContent>
-                 <select 
-                   value={selectedTemplate}
-                   onChange={(e) => setSelectedTemplate(e.target.value)}
-                   className="w-full p-2 border rounded-md mb-4"
-                 >
-                   <option value="simple">Simple Products</option>
-                   <option value="variations">Products with Variations</option>
-                   <option value="full">Full Product Details</option>
-                 </select>
-                 <div className="flex gap-2">
-                   <Button variant="outline" className="flex-1">
-                     <Download className="h-4 w-4 mr-2" />
-                     Download Template
-                   </Button>
-                   <Button className="flex-1">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Filled Template
-                      </Button>
-                 </div>
-               </CardContent>
-             </Card>
-           </div>
-
-           {/* Import history */}
-           <div className='p-4'>
-           <Card>
-             <CardHeader>
-               <CardTitle>Import History</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <Table>
-                 <TableHeader>
-                   <TableRow>
-                     <TableHead>Date</TableHead>
-                     <TableHead>Template</TableHead>
-                     <TableHead>Products</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Actions</TableHead>
-                   </TableRow>
-                 </TableHeader>
-                 <TableBody>
-                   {recentImports.map(item => (
-                     <TableRow key={item.id}>
-                       <TableCell>{item.date.toLocaleString()}</TableCell>
-                       <TableCell>{item.type}</TableCell>
-                       <TableCell>{item.productsCount}</TableCell>
-                       <TableCell>
-                         <StatusBadge status={item.status} />
-                       </TableCell>
-                       <TableCell>
-                         <Button variant="ghost" size="sm">
-                           Download Report
-                         </Button>
-                       </TableCell>
-                     </TableRow>
-                   ))}
-                 </TableBody>
-               </Table>
-               <div className="mt-4 border-t pt-4 flex items-center justify-between">
+          {/* Import history */}
+          <div className="p-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Import History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Template</TableHead>
+                        <TableHead>Products</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentImports.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.date.toLocaleString()}</TableCell>
+                          <TableCell>{item.type}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span>{item.productsCount} products</span>
+                              {item.errors > 0 && (
+                                <Badge variant="destructive">{item.errors} errors</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge status={item.status} />
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              Download Report
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="mt-4 border-t pt-4 flex items-center justify-between">
                   <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
                       <p className="text-sm font-medium">Rows per page</p>
@@ -457,18 +473,28 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" disabled>Previous</Button>
-                    <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">1</Button>
-                    <Button variant="outline" size="sm">2</Button>
-                    <Button variant="outline" size="sm">3</Button>
-                    <Button variant="outline" size="sm">Next</Button>
+                    <Button variant="outline" size="sm" disabled>
+                      Previous
+                    </Button>
+                    <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">
+                      1
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      2
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      3
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Next
+                    </Button>
                   </div>
                 </div>
-             </CardContent>
-           </Card>
-           </div>
-         </div>
-       </TabsContent>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TabsContent>
 
        <TabsContent value="sync">
          <div className="space-y-6">
@@ -662,7 +688,7 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
       <BrandSyncModal 
         isOpen={modalState.brandSync}
         onClose={() => setModalState({...modalState, brandSync: false})}
-        brand="Swarovski"
+        brand={selectedBrand}
       />
     
       <ScanDetailsModal
