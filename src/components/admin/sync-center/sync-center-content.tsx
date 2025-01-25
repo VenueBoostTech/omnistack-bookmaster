@@ -608,81 +608,115 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
            </div>
          </div>
        </TabsContent>
-
        <TabsContent value="history">
-         <Card>
-           <CardHeader>
-             <CardTitle>Sync & Import History</CardTitle>
-           </CardHeader>
-           <CardContent>
-             <div className="space-y-8">
-               {/* Timeline items */}
-               <div className="relative pl-8 border-l-2 border-muted space-y-8">
-                 {recentImports.map((item, index) => (
-                   <div key={index} className="relative">
-                     <div className="absolute -left-[41px] p-1 bg-white rounded-full">
-                       {item.status === 'completed' ? (
-                         <CheckCircle className="h-5 w-5 text-green-500" />
-                       ) : item.status === 'in_progress' ? (
-                         <RefreshCcw className="h-5 w-5 text-blue-500" />
-                       ) : (
-                         <XCircle className="h-5 w-5 text-red-500" />
-                       )}
-                     </div>
-                     <div className="bg-accent/10 rounded-lg p-4">
-                       <div className="flex justify-between items-start mb-2">
-                         <div>
-                           <h4 className="font-medium">{item.type}</h4>
-                           <p className="text-sm text-muted-foreground">
-                             {item.date.toLocaleString()}
-                           </p>
-                         </div>
-                         <StatusBadge status={item.status} />
-                       </div>
-                       <div className="text-sm">
-                         <p>Products: {item.productsCount}</p>
-                         {item.errors > 0 && (
-                           <p className="text-red-500">Errors: {item.errors}</p>
-                         )}
-                       </div>
-                       <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedActivity(item);
-                          setModalState(prev => ({...prev, activityDetails: true}));
-                        }}
-                      >
-                        View Details
-                      </Button>
-                     </div>
-                     </div>
-                 ))}
-               </div>
+  <div className="p-">
+    <Card>
+    <CardHeader>
+  <div className="flex justify-between items-start">
+    <div>
+      <div className="flex items-center gap-2">
+        <FileSpreadsheet className="h-5 w-5" />
+        <span className="text-lg font-bold">Sync & Import History</span>
+        <StatusBadge status="in-sync" />
+      </div>
+      <p className="text-sm text-muted-foreground mt-2 mb-4">
+        Track and review all past sync and import operations, including errors and successes.
+      </p>
+    </div>
+    
+  </div>
+</CardHeader>
 
-               {/* Additional history filters */}
-               <div className="flex gap-4 items-center">
-                 <select className="p-2 border rounded-md text-sm">
-                   <option value="all">All Types</option>
-                   <option value="import">Imports</option>
-                   <option value="sync">Syncs</option>
-                   <option value="scan">Scans</option>
-                 </select>
-                 <select className="p-2 border rounded-md text-sm">
-                   <option value="all">All Statuses</option>
-                   <option value="completed">Completed</option>
-                   <option value="in_progress">In Progress</option>
-                   <option value="error">Error</option>
-                 </select>
-                 <Button variant="outline" size="sm">
-                   <History className="h-4 w-4 mr-2" />
-                   Export History
-                 </Button>
-               </div>
-             </div>
-           </CardContent>
-         </Card>
-       </TabsContent>
+      <CardContent>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Products</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentImports.map((item) => (
+                <TableRow key={item.id} className="hover:bg-gray-50">
+                  <TableCell className="text-sm">{item.date.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm">{item.type}</TableCell>
+                  <TableCell className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <span>{item.productsCount} products</span>
+                      {item.errors > 0 && (
+                        <Badge variant="destructive">{item.errors} errors</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={item.status} />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedActivity(item);
+                        setModalState((prev) => ({ ...prev, activityDetails: true }));
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        {/* Pagination */}
+        <div className="mt-4 border-t pt-4 flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm font-medium">Rows per page</p>
+              <select className="h-8 w-16 rounded-md border border-input bg-background">
+                <option>5</option>
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+              </select>
+            </div>
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+              Page 1 of 3
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+            <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">
+              1
+            </Button>
+            <Button variant="outline" size="sm">
+              2
+            </Button>
+            <Button variant="outline" size="sm">
+              3
+            </Button>
+            <Button variant="outline" size="sm">
+              Next
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+  {/* Activity Details Modal */}
+  <ActivityDetailsModal
+    isOpen={modalState.activityDetails}
+    onClose={() => setModalState((prev) => ({ ...prev, activityDetails: false }))}
+    activity={selectedActivity}
+  />
+</TabsContent>
+
      </Tabs>
       <ImportModal 
         isOpen={modalState.quickImport}
