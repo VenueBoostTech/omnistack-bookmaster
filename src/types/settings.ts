@@ -29,7 +29,7 @@ export interface GeneralSettings {
       nextInvoiceNumber: number;
     }
    }
-   
+
    export interface IntegrationSettings {
     venueBoost: {
       apiKey?: string;
@@ -50,6 +50,28 @@ export interface GeneralSettings {
         events: string[];
         enabled: boolean;
       }[];
+    };
+   }
+
+   export interface AutomationSettings {
+    autoStockReorder: {
+      enabled: boolean;
+      threshold: number;
+      suppliers: string[];
+    };
+    dailyBackup: {
+      enabled: boolean;
+      time: string;
+      retentionDays: number;
+    };
+    reportGeneration: {
+      enabled: boolean;
+      schedule: {
+        frequency: 'daily' | 'weekly' | 'monthly';
+        day?: number;
+        time: string;
+      };
+      reports: string[];
     };
    }
       
