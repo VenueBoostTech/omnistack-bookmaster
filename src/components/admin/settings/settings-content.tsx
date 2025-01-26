@@ -98,9 +98,16 @@ export function SettingsContent() {
           </TabsContent>
 
 
-        <TabsContent value="notifications" className="space-y-6 mt-6">
-          <NotificationsTab />
-        </TabsContent>
+          <TabsContent value="notifications" className="space-y-6 mt-6">
+            <NotificationsTab
+              initialSettings={localSettings?.notifications || {
+                emailNotifications: true,
+                lowStockAlerts: true,
+                transactionAlerts: true,
+              }}
+              onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
+            />
+          </TabsContent>
 
         <TabsContent value="localizations" className="space-y-6 mt-6">
           <LocalizationTab />

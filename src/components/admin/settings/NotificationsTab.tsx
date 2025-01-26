@@ -1,85 +1,69 @@
-// components/settings/NotificationsTab.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useClient } from '@/hooks/useClient';
-import { NotificationSettings } from '@/types/settings';
-import { toast } from 'react-hot-toast';
+import { NotificationSettings } from "@/types/settings";
 
-export function NotificationsTab() {
- const { clientId } = useClient();
- const [settings, setSettings] = useState<NotificationSettings>({
-   emailNotifications: true,
-   lowStockAlerts: true,
-   transactionAlerts: true
- });
+interface NotificationsTabProps {
+  initialSettings: NotificationSettings;
+  onChange: (updatedSettings: NotificationSettings) => void;
+}
 
- useEffect(() => {
-   const fetchSettings = async () => {
-     try {
-       const res = await fetch(`/api/settings?clientId=${clientId}`);
-       const data = await res.json();
-       if (data?.notifications) {
-         setSettings(data.notifications);
-       }
-     } catch (error) {
-       toast.error('Failed to load settings');
-     }
-   };
-   
-   if (clientId) {
-     fetchSettings();
-   }
- }, [clientId]);
+export function NotificationsTab({ initialSettings, onChange }: NotificationsTabProps) {
+  const [localSettings, setLocalSettings] = useState<NotificationSettings>(initialSettings);
 
- const toggleSetting = (setting: keyof NotificationSettings) => {
-   setSettings(prev => ({
-     ...prev,
-     [setting]: !prev[setting]
-   }));
- };
+  useEffect(() => {
+    setLocalSettings(initialSettings); // Sync local state with parent settings
+  }, [initialSettings]);
 
- return (
-   <Card>
-     <CardHeader>
-       <CardTitle>Notifications</CardTitle>
-     </CardHeader>
-     <CardContent className="space-y-4">
-       <div className="space-y-4">
-         <div className="flex items-center justify-between">
-           <div className="space-y-0.5">
-             <div className="text-sm font-medium">Email Notifications</div>
-             <div className="text-sm text-muted-foreground">Receive daily summaries and alerts</div>
-           </div>
-           <Switch 
-             checked={settings.emailNotifications}
-             onCheckedChange={() => toggleSetting('emailNotifications')}
-           />
-         </div>
-         <div className="flex items-center justify-between">
-           <div className="space-y-0.5">
-             <div className="text-sm font-medium">Low Stock Alerts</div>
-             <div className="text-sm text-muted-foreground">Get notified when inventory is low</div>
-           </div>
-           <Switch 
-             checked={settings.lowStockAlerts}
-             onCheckedChange={() => toggleSetting('lowStockAlerts')}
-           />
-         </div>
-         <div className="flex items-center justify-between">
-           <div className="space-y-0.5">
-             <div className="text-sm font-medium">Transaction Alerts</div>
-             <div className="text-sm text-muted-foreground">Notifications for important transactions</div>
-           </div>
-           <Switch 
-             checked={settings.transactionAlerts}
-             onCheckedChange={() => toggleSetting('transactionAlerts')}
-           />
-         </div>
-       </div>
-     </CardContent>
-   </Card>
- );
+  const toggleSetting = (setting: keyof NotificationSettings) => {
+    setLocalSettings((prev) => {
+      const updatedSettings = { ...prev, [setting]: !prev[setting] };
+      onChange(updatedSettings); // Notify parent about the changes
+      return updatedSettings;
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Notifications</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">Email Notifications</div>
+              <div className="text-sm text-muted-foreground">Receive daily summaries and alerts</div>
+            </div>
+            <Switch
+              checked={localSettings.emailNotifications}
+              onCheckedChange={() => toggleSetting("emailNotifications")}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">Low Stock Alerts</div>
+              <div className="text-sm text-muted-foreground">Get notified when inventory is low</div>
+            </div>
+            <Switch
+              checked={localSettings.lowStockAlerts}
+              onCheckedChange={() => toggleSetting("lowStockAlerts")}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">Transaction Alerts</div>
+              <div className="text-sm text-muted-foreground">Notifications for important transactions</div>
+            </div>
+            <Switch
+              checked={localSettings.transactionAlerts}
+              onCheckedChange={() => toggleSetting("transactionAlerts")}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
