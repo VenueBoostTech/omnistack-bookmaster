@@ -12,3 +12,17 @@ export async function generateVendorCode() {
       if (!exists) return code;
     }
   }
+
+  export async function generateTransactionNumber() {
+    const today = new Date();
+    const year = today.getFullYear().toString().slice(-2);
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+   
+    while (true) {
+      const num = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+      const number = `TRX-${year}${month}-${num}`;
+      
+      const exists = await prisma.transaction.findFirst({ where: { number } });
+      if (!exists) return number;
+    }
+   }

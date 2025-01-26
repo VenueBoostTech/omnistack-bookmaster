@@ -1,5 +1,6 @@
 // app/api/transactions/route.ts
 import { prisma } from '@/lib/prisma';
+import { generateTransactionNumber } from '@/lib/utils';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -109,3 +110,37 @@ async function getTransactionMetrics(clientId: string) {
     completedToday: completed
   };
 }
+
+
+
+export async function POST(request: Request) {
+    try {
+      const body = await request.json();
+      const number = await generateTransactionNumber();
+   
+      const transaction = await prisma.transaction.create({
+        data: {
+          ...body,
+          number,
+          date: new Date(body.date)
+        }
+      });
+
+      // Update account balance
+   await prisma.account.update({
+    where: { id: body.accountId },
+    data: {
+      balance: {
+        increment: body.debit - body.credit
+      }
+    }
+  });
+   
+      return NextResponse.json(transaction);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Failed to create transaction' },
+        { status: 500 }
+      );
+    }
+   }
