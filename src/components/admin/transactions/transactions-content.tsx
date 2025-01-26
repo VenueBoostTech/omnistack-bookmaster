@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Filter, Search, Download, Calendar, Receipt, ArrowRightLeft, FileText, Eye, MoreHorizontal, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Plus, Filter, Search, Download, Calendar, Receipt, ArrowRightLeft, FileText, Eye, MoreHorizontal, ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react";
 import { useClient } from '@/hooks/useClient';
 import { toast } from 'react-hot-toast';
+import { DeleteTransactionModal } from './modals/delete-transaction-modal';
+import { AddTransactionModal } from './modals/add-transaction-modal';
 
 interface Transaction {
  id: string;
@@ -78,6 +80,11 @@ export function TransactionsContent() {
    completedToday: 0
  });
 
+const [showAddModal, setShowAddModal] = useState(false);
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+
  const fetchTransactions = useCallback(async () => {
    if (!clientId) return;
    
@@ -112,6 +119,24 @@ export function TransactionsContent() {
 
  const totalPages = Math.ceil(total / pageSize);
 
+// TransactionsContent.tsx
+const handleDelete = async () => {
+  try {
+    const res = await fetch(`/api/transactions/${selectedTransaction?.id}`, { 
+      method: 'DELETE' 
+    });
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error);
+    
+    toast.success('Transaction deleted');
+    fetchTransactions();
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Failed to delete transaction');
+  }
+  setShowDeleteModal(false);
+};
+
  return (
    <div className="space-y-6">
      {/* Header */}
@@ -127,10 +152,13 @@ export function TransactionsContent() {
            <Download className="h-4 w-4 mr-2" />
            Export
          </Button>
-         <Button style={{ backgroundColor: "#5FC4D0" }}>
-           <Plus className="h-4 w-4 mr-2" />
-           New Transaction
-         </Button>
+         <Button 
+          onClick={() => setShowAddModal(true)} 
+          style={{ backgroundColor: "#5FC4D0" }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Transaction
+        </Button>
        </div>
      </div>
 
@@ -251,12 +279,13 @@ export function TransactionsContent() {
                Start by creating your first transaction
              </p>
              <Button 
-               className="mt-4"
-               style={{ backgroundColor: "#5FC4D0" }}
-             >
-               <Plus className="h-4 w-4 mr-2" />
-               New Transaction
-             </Button>
+              className="mt-4"
+              style={{ backgroundColor: "#5FC4D0" }}
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Transaction
+            </Button>
            </div>
          ) : (
            <Table>
@@ -308,12 +337,27 @@ export function TransactionsContent() {
                    </TableCell>
                    <TableCell>
                      <div className="flex gap-2">
-                       <Button variant="ghost" size="sm">
-                         <Eye className="h-4 w-4" />
-                       </Button>
-                       <Button variant="ghost" size="sm">
-                         <MoreHorizontal className="h-4 w-4" />
-                       </Button>
+                     <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button 
+                       variant="ghost" 
+                       size="sm"
+                       onClick={() => {
+                        setSelectedTransaction(transaction);
+                        setShowDeleteModal(true);
+                       }}
+                     >
+                       <Trash2 className="h-4 w-4" />
+                     </Button>
+                        <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {}}
+                        >
+                        <MoreHorizontal className="h-4 w-4" />
+                        </Button>
                      </div>
                    </TableCell>
                  </TableRow>
@@ -383,6 +427,19 @@ export function TransactionsContent() {
          )}
        </CardContent>
      </Card>
+    
+<AddTransactionModal 
+  isOpen={showAddModal}
+  onClose={() => setShowAddModal(false)}
+  onSuccess={fetchTransactions}
+/>
+
+<DeleteTransactionModal 
+  isOpen={showDeleteModal}
+  onClose={() => setShowDeleteModal(false)}
+  onConfirm={handleDelete}
+  transactionId={selectedTransaction?.id || ''}
+/>
    </div>
  );
 }
