@@ -112,6 +112,38 @@ model Account {
   @@unique([clientId, code])
 }
 
+
+model PurchaseOrder {
+ id            String              @id @default(auto()) @map("_id") @db.ObjectId
+ clientId      String              @db.ObjectId
+ client        Client              @relation(fields: [clientId], references: [id])
+ number        String              @unique
+ date          DateTime
+ vendorId      String              @db.ObjectId  
+ vendor        Vendor              @relation(fields: [vendorId], references: [id])
+ items         PurchaseOrderItem[]
+ status        PurchaseOrderStatus @default(DRAFT)
+ priority      PurchaseOrderPriority @default(NORMAL)
+ totalValue    Float               @default(0)
+ paymentStatus String              @default("PENDING") // PENDING, PAID, OVERDUE
+ expectedDelivery DateTime?
+ notes         String?
+ createdAt     DateTime            @default(now())
+ updatedAt     DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+ id              String        @id @default(auto()) @map("_id") @db.ObjectId
+ purchaseOrderId String        @db.ObjectId
+ purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+ productId       String        @db.ObjectId
+ quantity        Int
+ unitPrice       Float
+ totalPrice      Float
+ notes           String?
+}
+
+
 model Transaction {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   clientId      String    @db.ObjectId
@@ -211,4 +243,19 @@ enum IntegrationStatus {
   DISCONNECTED
   PENDING
   FAILED
+}
+
+enum PurchaseOrderStatus {
+ DRAFT
+ CONFIRMED  
+ IN_TRANSIT
+ DELIVERED
+ CANCELLED
+}
+
+
+enum PurchaseOrderPriority {
+ LOW
+ NORMAL 
+ HIGH
 }
