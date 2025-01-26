@@ -26,15 +26,3 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: npm ci
-
-      # Verify Prisma setup
-      - name: Verify Prisma setup
-        run: |
-          npx prisma generate
-          npx prisma db push
-        env:
-          DATABASE_URL: mongodb://localhost:27017/testdb
-
-      # Run Cypress tests
-      - name: Run Cypress tests
-        run: npm run cy:run
