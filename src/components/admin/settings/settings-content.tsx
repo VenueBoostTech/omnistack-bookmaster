@@ -121,9 +121,17 @@ export function SettingsContent() {
             />
           </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-6 mt-6">
-          <IntegrationsTab />
+          <TabsContent value="integrations" className="space-y-6 mt-6">
+          <IntegrationsTab
+            initialSettings={localSettings?.integrations || {
+              venueBoost: { enabled: false },
+              bankIntegration: { enabled: false },
+              webhooks: { endpoints: [] },
+            }}
+            onChange={(updatedIntegrations) => handleTabChange("integrations", updatedIntegrations)}
+          />
         </TabsContent>
+
 
         <TabsContent value="automation" className="space-y-6 mt-6">
           <AutomationTab />
