@@ -25,8 +25,28 @@ model Client {
   accounts          Account[]
   supabaseId        String        @unique
   transactions      Transaction[]
+  settings        Json?           @default("{}")
+  integrations    Integration[]
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+}
+
+
+model Integration {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  clientId    String          @db.ObjectId
+  client      Client          @relation(fields: [clientId], references: [id])
+  type        IntegrationType
+  name        String
+  status      IntegrationStatus @default(DISCONNECTED)
+  config      Json?
+  secretKey   String?
+  webhookUrl  String?
+  lastSync    DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([clientId, type])
 }
 
 model User {
@@ -178,4 +198,17 @@ enum Currency {
   USD
   EUR
   ALL
+}
+
+enum IntegrationType {
+  VENUE_BOOST
+  BANK
+  WEBHOOK
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  PENDING
+  FAILED
 }
