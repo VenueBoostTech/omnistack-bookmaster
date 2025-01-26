@@ -30,4 +30,27 @@ export interface GeneralSettings {
     }
    }
    
+   export interface IntegrationSettings {
+    venueBoost: {
+      apiKey?: string;
+      enabled: boolean;
+      lastSync?: Date;
+      webhookUrl?: string;
+    };
+    bankIntegration: {
+      bankId?: string;
+      accountId?: string;
+      enabled: boolean;
+      lastSync?: Date;
+    };
+    webhooks: {
+      endpoints: {
+        url: string;
+        secret: string;
+        events: string[];
+        enabled: boolean;
+      }[];
+    };
+   }
+      
   
