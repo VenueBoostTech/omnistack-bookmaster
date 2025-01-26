@@ -1,440 +1,392 @@
 "use client"
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useCallback, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trash2, MoreHorizontal, Plus, Search, ShoppingCart, Clock, Truck, CreditCard, Building2, Store, ArrowUpRight, ArrowDownRight, Receipt, ExternalLink, History } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from 'react-hot-toast';
+import { useClient } from '@/hooks/useClient';
+import { AddPurchaseOrderModal } from '../purchases/modals/add-purchase-order-modal';
 import InputSelect from "@/components/Common/InputSelect";
-import {
-  ShoppingCart,
-  Search,
-  Filter,
-  Plus,
-  FileSpreadsheet,
-  MoreVertical,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
-  Users,
-  Calendar,
-  Package,
-  FileText,
-  History,
-  ExternalLink,
-  CheckCircle2,
-  Store,
-  CreditCard,
-  Receipt,
-  Truck,
-  AlertTriangle,
-  Building2
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DeletePurchaseOrderModal } from '../purchases/modals/delete-purchase-order-modal';
 
-const PURCHASE_METRICS = [
+interface PurchaseOrder {
+ id: string;
+ number: string;
+ date: string;
+ vendor: {
+   name: string;
+ };
+ warehouse?: string;
+ items: any[];
+ totalValue: number;
+ status: string;
+ expectedDelivery: string | null;
+ paymentStatus: string;
+ priority: string;
+}
+
+interface MetricItem {
+  value: number;
+  change: number;
+  trend: 'up' | 'down';
+  period: string;
+}
+
+interface PurchaseMetrics {
+  totalOrders: MetricItem;
+  pendingOrders: MetricItem;
+  expectedArrivals: MetricItem;
+  purchaseValue: MetricItem;
+}
+
+export function PurchasesContent() {
+ const { clientId } = useClient();
+ const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+ const [metrics, setMetrics] = useState<PurchaseMetrics>({
+  totalOrders: { value: 0, change: 0, trend: 'up', period: '' },
+  pendingOrders: { value: 0, change: 0, trend: 'up', period: '' },
+  expectedArrivals: { value: 0, change: 0, trend: 'up', period: '' },
+  purchaseValue: { value: 0, change: 0, trend: 'up', period: '' }
+});
+
+ const [loading, setLoading] = useState(true);
+ const [page, setPage] = useState(1);
+ const [pageSize, setPageSize] = useState(10);
+ const [total, setTotal] = useState(0);
+ const [filters, setFilters] = useState({
+   search: '',
+   vendor: 'all',
+   status: 'all',
+   payment: 'all'
+ });
+ const [showAddModal, setShowAddModal] = useState(false);
+ const [showDeleteModal, setShowDeleteModal] = useState(false);
+ const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+
+ const fetchOrders = useCallback(async () => {
+   if (!clientId) return;
+   
+   try {
+     setLoading(true);
+     const params = new URLSearchParams({
+       page: page.toString(),
+       pageSize: pageSize.toString(),
+       clientId,
+       search: filters.search,
+       status: filters.status,
+       payment: filters.payment
+     });
+
+     const res = await fetch(`/api/purchase-orders?${params}`);
+     const data = await res.json();
+     
+     if (!res.ok) throw new Error(data.error);
+     
+     setOrders(data.items);
+     setTotal(data.total);
+     setMetrics(data.metrics);
+   } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to fetch orders");
+   } finally {
+     setLoading(false);
+   }
+ }, [clientId, page, pageSize, filters]);
+
+ useEffect(() => {
+   fetchOrders();
+ }, [fetchOrders]);
+
+ // Add this before the component
+const getStatusColor = (status: string) => {
+  const colors = {
+    DRAFT: "bg-gray-100 text-gray-800",
+    CONFIRMED: "bg-blue-100 text-blue-800",
+    IN_TRANSIT: "bg-yellow-100 text-yellow-800",
+    DELIVERED: "bg-green-100 text-green-800",
+    CANCELLED: "bg-red-100 text-red-800"
+  };
+  return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+};
+
+const getPaymentStatusColor = (status: string) => {
+  const colors = {
+    PAID: "bg-green-100 text-green-800",
+    PENDING: "bg-yellow-100 text-yellow-800",
+    OVERDUE: "bg-red-100 text-red-800"
+  };
+  return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+};
+
+
+ const handleDelete = async () => {
+   if (!selectedOrder) return;
+
+   try {
+     const res = await fetch(`/api/purchase-orders/${selectedOrder.id}`, {
+       method: 'DELETE'
+     });
+
+     if (!res.ok) throw new Error('Failed to delete order');
+
+     toast.success('Order deleted');
+     fetchOrders();
+   } catch (error) {
+     toast.error('Failed to delete order');
+   }
+   setShowDeleteModal(false);
+ };
+
+ 
+ const METRIC_CARDS = [
   {
     title: "Total Orders",
-    value: "156",
-    change: "+12",
-    trend: "up",
-    period: "this month",
+    value: metrics.totalOrders.value,
+    change: metrics.totalOrders.change.toString(),
+    trend: metrics.totalOrders.trend,
+    period: metrics.totalOrders.period,
     icon: ShoppingCart
   },
   {
     title: "Pending Orders",
-    value: "28",
-    change: "-3",
-    trend: "down",
-    period: "vs last week",
+    value: metrics.pendingOrders.value,
+    change: metrics.pendingOrders.change.toString(),
+    trend: metrics.pendingOrders.trend,
+    period: metrics.pendingOrders.period,
     icon: Clock
   },
   {
     title: "Expected Arrivals",
-    value: "15",
-    change: "+4",
-    trend: "up",
-    period: "this week",
+    value: metrics.expectedArrivals.value,
+    change: metrics.expectedArrivals.change.toString(),
+    trend: metrics.expectedArrivals.trend,
+    period: metrics.expectedArrivals.period,
     icon: Truck
   },
   {
     title: "Purchase Value",
-    value: "€45.2k",
-    change: "+15.2%",
-    trend: "up",
-    period: "this month",
+    value: `€${metrics.purchaseValue.value.toLocaleString()}`,
+    change: `${metrics.purchaseValue.change}%`,
+    trend: metrics.purchaseValue.trend,
+    period: metrics.purchaseValue.period,
     icon: CreditCard
   }
 ];
 
-const PURCHASE_ORDERS = [
-  {
-    id: "PO-2024-001",
-    date: "2024-01-20",
-    vendor: {
-      name: "Office Solutions Ltd",
-      rating: 4.5
-    },
-    warehouse: "Main Warehouse",
-    items: 12,
-    totalValue: 2500.00,
-    status: "CONFIRMED",
-    expectedDelivery: "2024-01-25",
-    paymentStatus: "PENDING",
-    priority: "HIGH"
-  },
-  {
-    id: "PO-2024-002",
-    date: "2024-01-19",
-    vendor: {
-      name: "Tech Supplies Co",
-      rating: 4.2
-    },
-    warehouse: "South Branch",
-    items: 8,
-    totalValue: 1850.00,
-    status: "IN_TRANSIT",
-    expectedDelivery: "2024-01-22",
-    paymentStatus: "PAID",
-    priority: "NORMAL"
-  },
-  {
-    id: "PO-2024-003",
-    date: "2024-01-18",
-    vendor: {
-      name: "Global Trading Inc",
-      rating: 3.8
-    },
-    warehouse: "East Storage",
-    items: 15,
-    totalValue: 3200.00,
-    status: "DELIVERED",
-    expectedDelivery: "2024-01-21",
-    paymentStatus: "PAID",
-    priority: "LOW"
-  }
-];
+ return (
+   <div className="space-y-6">
+     {/* Header */} 
+     <div className="flex justify-between items-start">
+       <div>
+         <h1 className="text-2xl font-bold tracking-tight">Purchase Orders</h1>
+         <p className="text-sm text-muted-foreground mt-2">
+           Manage purchase orders and supplier deliveries
+         </p>
+       </div>
+       <Button 
+         onClick={() => setShowAddModal(true)} 
+         className="bg-[#5FC4D0]"
+       >
+         <Plus className="h-4 w-4 mr-2" />
+         New Order
+       </Button>
+     </div>
 
-const getStatusBadge = (status: string) => {
-  const variants = {
-    'CONFIRMED': 'bg-blue-100 text-blue-800',
-    'IN_TRANSIT': 'bg-yellow-100 text-yellow-800',
-    'DELIVERED': 'bg-green-100 text-green-800',
-    'CANCELLED': 'bg-red-100 text-red-800'
-  };
-  return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
-};
+     {/* Metrics */}
+     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+       {METRIC_CARDS.map((metric) => (
+         <Card key={metric.title}>
+           <CardContent className="p-6">
+             <div className="flex justify-between items-start">
+               <div className="space-y-2">
+                 <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
+                 <div className="space-y-1">
+                   <h3 className="text-2xl font-bold">{metric.value}</h3>
+                   <div className="flex items-center gap-2">
+                     <div className={`flex items-center text-xs ${
+                       metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                     }`}>
+                       {metric.trend === 'up' ? 
+                         <ArrowUpRight className="h-3 w-3 mr-1" /> : 
+                         <ArrowDownRight className="h-3 w-3 mr-1" />
+                       }
+                       {metric.change}
+                     </div>
+                     <p className="text-xs text-muted-foreground">{metric.period}</p>
+                   </div>
+                 </div>
+               </div>
+               <div className="p-2 bg-primary/10 rounded-lg">
+                 <metric.icon className="h-5 w-5 text-primary" />
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+       ))}
+     </div>
 
-const getPaymentStatusBadge = (status: string) => {
-  const variants = {
-    'PAID': 'bg-green-100 text-green-800',
-    'PENDING': 'bg-yellow-100 text-yellow-800',
-    'OVERDUE': 'bg-red-100 text-red-800'
-  };
-  return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
-};
+     {/* Filters */}
+     <Card>
+       <CardHeader>
+        <div className='mb-1'>
+         <h3 className="font-medium">Filter Orders</h3>
+         <p className="text-sm text-muted-foreground">
+           Search and filter through purchase orders
+         </p>
+         </div>
+       </CardHeader>
+       <CardContent className="p-0">
+         <div className="flex gap-4">
+           <div className="relative mt-3 flex-1">
+             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+             <Input 
+               placeholder="Search orders..." 
+               className="pl-9"
+               value={filters.search}
+               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+             />
+           </div>
+           <InputSelect
+             name="status"
+             label=""
+             value={filters.status}
+             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+             options={[
+               { value: "all", label: "All Status" },
+               { value: "CONFIRMED", label: "Confirmed" },
+               { value: "IN_TRANSIT", label: "In Transit" },
+               { value: "DELIVERED", label: "Delivered" }
+             ]}
+           />
+           <InputSelect
+             name="payment"
+             label=""
+             value={filters.payment}
+             onChange={(e) => setFilters(prev => ({ ...prev, payment: e.target.value }))}
+             options={[
+               { value: "all", label: "All Payments" },
+               { value: "PAID", label: "Paid" },
+               { value: "PENDING", label: "Pending" }
+             ]}
+           />
+         </div>
+       </CardContent>
+     </Card>
 
-const getPriorityBadge = (priority: string) => {
-  const variants = {
-    'HIGH': 'bg-red-100 text-red-800',
-    'NORMAL': 'bg-blue-100 text-blue-800',
-    'LOW': 'bg-green-100 text-green-800'
-  };
-  return variants[priority as keyof typeof variants] || 'bg-gray-100 text-gray-800';
-};
+     {/* Orders List */}
+     <Card>
+       <CardContent className="p-0">
+         <Table>
+           <TableHeader>
+             <TableRow>
+               <TableHead>Order ID</TableHead>
+               <TableHead>Date</TableHead>
+               <TableHead>Vendor</TableHead>
+               <TableHead>Items</TableHead>
+               <TableHead>Value</TableHead>
+               <TableHead>Status</TableHead>
+               <TableHead>Payment</TableHead>
+               <TableHead className="text-right">Actions</TableHead>
+             </TableRow>
+           </TableHeader>
+           <TableBody>
+             {loading ? (
+               <TableRow>
+                 <TableCell colSpan={8} className="text-center py-4">Loading...</TableCell>
+               </TableRow>
+             ) : orders.length === 0 ? (
+               <TableRow>
+                 <TableCell colSpan={8} className="text-center py-8">
+                   <div className="text-4xl mb-4">📦</div>
+                   <h3 className="text-lg font-medium">No orders found</h3>
+                   <p className="text-sm text-muted-foreground mt-1">
+                     Start by creating your first purchase order
+                   </p>
+                   <Button 
+                     className="mt-4 bg-[#5FC4D0]"
+                     onClick={() => setShowAddModal(true)}
+                   >
+                     <Plus className="h-4 w-4 mr-2" />
+                     New Order
+                   </Button>
+                 </TableCell>
+               </TableRow>
+             ) : orders.map((order) => (
+               <TableRow key={order.id}>
+                 <TableCell className="font-medium">{order.number}</TableCell>
+                 <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                 <TableCell>{order.vendor.name}</TableCell>
+                 <TableCell>{order.items.length} items</TableCell>
+                 <TableCell>€{order.totalValue.toLocaleString()}</TableCell>
+                 <TableCell>
+                  <Badge className={getStatusColor(order.status)}>
+                    {order.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                <Badge className={getPaymentStatusColor(order.paymentStatus)}>
+                  {order.paymentStatus}
+                </Badge>
+              </TableCell>
+                 <TableCell>
+                   <div className="flex justify-end gap-2">
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <Button variant="ghost" size="icon">
+                           <MoreHorizontal className="h-4 w-4" />
+                         </Button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end">
+                         <DropdownMenuItem>
+                           <ExternalLink className="h-4 w-4 mr-2" />
+                           View Details
+                         </DropdownMenuItem>
+                         <DropdownMenuItem>
+                           <History className="h-4 w-4 mr-2" />
+                           Track Order
+                         </DropdownMenuItem>
+                         <DropdownMenuItem>
+                           <Receipt className="h-4 w-4 mr-2" />
+                           View Invoice
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem 
+                           className="text-red-600"
+                           onClick={() => {
+                             setSelectedOrder(order);
+                             setShowDeleteModal(true);
+                           }}
+                         >
+                           <Trash2 className="h-4 w-4 mr-2" />
+                           Delete Order
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                   </div>
+                 </TableCell>
+               </TableRow>
+             ))}
+           </TableBody>
+         </Table>
+       </CardContent>
+     </Card>
 
-export function PurchasesContent() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const totalItems = 100; // Replace with actual total
-  const totalPages = Math.ceil(totalItems / pageSize);
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Purchase Orders</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Manage purchase orders and supplier deliveries
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button style={{ backgroundColor: "#5FC4D0" }}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Order
-          </Button>
-        </div>
-      </div>
+     <AddPurchaseOrderModal
+       isOpen={showAddModal}
+       onClose={() => setShowAddModal(false)}
+       onSuccess={fetchOrders}
+     />
 
-      {/* Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {PURCHASE_METRICS.map((metric) => (
-          <Card key={metric.title}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-bold">{metric.value}</h3>
-                    <div className="flex items-center gap-2">
-                      <div className={`flex items-center text-xs ${
-                        metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {metric.trend === 'up' ? 
-                          <ArrowUpRight className="h-3 w-3 mr-1" /> : 
-                          <ArrowDownRight className="h-3 w-3 mr-1" />
-                        }
-                        {metric.change}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{metric.period}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <metric.icon className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="mb-1">
-            <h3 className="font-medium">Filter Orders</h3>
-            <p className="text-sm text-muted-foreground">
-              Search and filter through purchase orders
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 pt-0">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center flex-1 gap-2 w-full">
-              <div className="relative mt-2 flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search orders by ID, vendor, or items..." 
-                  className="pl-9 w-full"
-                />
-              </div>
-              <InputSelect
-                name="vendor"
-                label=""
-                value="all"
-                onChange={() => {}}
-                options={[
-                  { value: "all", label: "All Vendors" },
-                  { value: "office", label: "Office Solutions" },
-                  { value: "tech", label: "Tech Supplies" }
-                ]}
-              />
-              <InputSelect
-                name="status"
-                label=""
-                value="all"
-                onChange={() => {}}
-                options={[
-                  { value: "all", label: "All Status" },
-                  { value: "confirmed", label: "Confirmed" },
-                  { value: "transit", label: "In Transit" },
-                  { value: "delivered", label: "Delivered" }
-                ]}
-              />
-              <InputSelect
-                name="payment"
-                label=""
-                value="all"
-                onChange={() => {}}
-                options={[
-                  { value: "all", label: "All Payments" },
-                  { value: "paid", label: "Paid" },
-                  { value: "pending", label: "Pending" }
-                ]}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Purchase Orders List */}
-      <div className="space-y-4">
-        {PURCHASE_ORDERS.map((order) => (
-          <Card key={order.id} className="hover:bg-accent/5 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Left Column - Basic Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{order.id}</h3>
-                        <Badge className={getStatusBadge(order.status)}>
-                          {order.status}
-                        </Badge>
-                        <Badge className={getPriorityBadge(order.priority)}>
-                          {order.priority}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-4 w-4" />
-                          {order.vendor.name}
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <Store className="h-4 w-4" />
-                          {order.warehouse}
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <History className="h-4 w-4 mr-2" />
-                          Track Order
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Receipt className="h-4 w-4 mr-2" />
-                          View Invoice
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                {/* Center Column - Order Details */}
-                <div className="flex-1">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Items</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{order.items} items</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Value</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">€{order.totalValue.toFixed(2)}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Badge className={getPaymentStatusBadge(order.paymentStatus)}>
-                        {order.paymentStatus}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column - Dates */}
-                <div className="w-48">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Order Date</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(order.date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Expected Delivery</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Truck className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(order.expectedDelivery).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {/* Pagination */}
-        <div className="border-t px-4 py-4 flex items-center justify-between bg-white">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select
-              className="h-8 w-16 rounded-md border border-input bg-background"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {page} of {totalPages}
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(p => p - 1)}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-            .map((p, i, arr) => (
-              <React.Fragment key={p}>
-                {i > 0 && arr[i - 1] !== p - 1 && (
-                  <span className="px-2">...</span>
-                )}
-                <Button
-                  variant={page === p ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPage(p)}
-                  className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
-                >
-                  {p}
-                </Button>
-              </React.Fragment>
-            ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(p => p + 1)}
-            disabled={page === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-      </div>
-
-      
-    </div>
-  );
+    <DeletePurchaseOrderModal
+      isOpen={showDeleteModal}
+      onClose={() => setShowDeleteModal(false)}
+      onConfirm={handleDelete}
+      orderNumber={selectedOrder?.number}
+    />
+   </div>
+ );
 }
-
-export default PurchasesContent;

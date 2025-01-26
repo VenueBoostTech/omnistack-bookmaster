@@ -1,6 +1,7 @@
 // lib/auth.ts
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { prisma } from "./prisma"
 
 export async function getSession() {
   return await getServerSession(authOptions)

@@ -9,107 +9,205 @@ generator client {
 }
 
 model Client {
-  id                String        @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  code              String        @unique
-  taxId             String?
-  address           String?
-  phone             String?
-  email             String?
-  fiscalYearStart   DateTime?
-  defaultCurrency   String        @default("USD")
-  status            ClientStatus  @default(ACTIVE)
-  users             User[]
-  vendors           Vendor[]
-  accounts          Account[]
-  supabaseId        String        @unique
-  transactions      Transaction[]
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  code            String          @unique
+  taxId           String?
+  address         String?
+  phone           String?
+  email           String?
+  omniGatewayId   String?         @unique
+  fiscalYearStart DateTime?
+  defaultCurrency String          @default("USD")
+  status          ClientStatus    @default(ACTIVE)
+  users           User[]
+  vendors         Vendor[]
+  accounts        Account[]
+  supabaseId      String          @unique
+  transactions    Transaction[]
+  settings        Json?           @default("{}")
+  integrations    Integration[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  PurchaseOrder   PurchaseOrder[]
+  Return          Return[]
+  Department      Department[]
+}
+
+model Integration {
+  id         String            @id @default(auto()) @map("_id") @db.ObjectId
+  clientId   String            @db.ObjectId
+  client     Client            @relation(fields: [clientId], references: [id])
+  type       IntegrationType
+  name       String
+  status     IntegrationStatus @default(DISCONNECTED)
+  config     Json?
+  secretKey  String?
+  webhookUrl String?
+  lastSync   DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([clientId, type])
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  email         String    @unique
-  name          String
-  role          UserRole  @default(USER)
-  password      String?
-  clientId      String    @db.ObjectId
-  client        Client    @relation(fields: [clientId], references: [id])
-  supabaseId    String    @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  email        String      @unique
+  name         String
+  role         UserRole    @default(USER)
+  password     String?
+  clientId     String      @db.ObjectId
+  client       Client      @relation(fields: [clientId], references: [id])
+  supabaseId   String      @unique
+  departmentId String?     @db.ObjectId
+  department   Department? @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  lastActive   DateTime?
 }
 
 enum VendorType {
- MANUFACTURER
- DISTRIBUTOR
- WHOLESALER
- OTHER
+  MANUFACTURER
+  DISTRIBUTOR
+  WHOLESALER
+  OTHER
 }
 
-
 model Vendor {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  clientId      String    @db.ObjectId
-  client        Client    @relation(fields: [clientId], references: [id])
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  clientId      String          @db.ObjectId
+  client        Client          @relation(fields: [clientId], references: [id])
   name          String
   code          String
   taxId         String?
   address       String?
   phone         String?
   email         String?
-  status        VendorStatus @default(ACTIVE)
-  type          VendorType @default(MANUFACTURER)
-  accountId     String?   @db.ObjectId
-  account       Account?  @relation(fields: [accountId], references: [id])
-  balance       Float     @default(0)
-  creditLimit   Float     @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  status        VendorStatus    @default(ACTIVE)
+  type          VendorType      @default(MANUFACTURER)
+  accountId     String?         @db.ObjectId
+  account       Account?        @relation(fields: [accountId], references: [id])
+  balance       Float           @default(0)
+  creditLimit   Float           @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  PurchaseOrder PurchaseOrder[]
+  Return        Return[]
 
   @@unique([clientId, code])
 }
 
 model Account {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  clientId      String    @db.ObjectId
-  client        Client    @relation(fields: [clientId], references: [id])
-  code          String
-  name          String
-  type          AccountType
-  category      AccountCategory
-  vendors       Vendor[]
-  balance       Float     @default(0)
-  transactions  Transaction[]
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  currency      Currency   @default(USD)
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String          @db.ObjectId
+  client       Client          @relation(fields: [clientId], references: [id])
+  code         String
+  name         String
+  type         AccountType
+  category     AccountCategory
+  vendors      Vendor[]
+  balance      Float           @default(0)
+  transactions Transaction[]
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  currency     Currency        @default(USD)
 
   @@unique([clientId, code])
 }
 
+model PurchaseOrder {
+  id               String                @id @default(auto()) @map("_id") @db.ObjectId
+  clientId         String                @db.ObjectId
+  client           Client                @relation(fields: [clientId], references: [id])
+  number           String                @unique
+  date             DateTime
+  vendorId         String                @db.ObjectId
+  vendor           Vendor                @relation(fields: [vendorId], references: [id])
+  items            PurchaseOrderItem[]
+  status           PurchaseOrderStatus   @default(DRAFT)
+  priority         PurchaseOrderPriority @default(NORMAL)
+  totalValue       Float                 @default(0)
+  paymentStatus    String                @default("PENDING") // PENDING, PAID, OVERDUE
+  expectedDelivery DateTime?
+  notes            String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+}
+
+model Return {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String       @db.ObjectId
+  client       Client       @relation(fields: [clientId], references: [id])
+  number       String       @unique
+  date         DateTime
+  vendorId     String       @db.ObjectId
+  vendor       Vendor       @relation(fields: [vendorId], references: [id])
+  items        ReturnItem[]
+  status       ReturnStatus @default(PROCESSING)
+  type         ReturnType
+  reason       String
+  creditStatus String       @default("PENDING")
+  totalValue   Float        @default(0)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model ReturnItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  returnId  String  @db.ObjectId
+  return    Return  @relation(fields: [returnId], references: [id])
+  productId String
+  quantity  Int
+  reason    String?
+  notes     String?
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  purchaseOrderId String        @db.ObjectId
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       String
+  quantity        Int
+  unitPrice       Float
+  totalPrice      Float
+  notes           String?
+}
+
+model Department {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  clientId  String   @db.ObjectId
+  client    Client   @relation(fields: [clientId], references: [id])
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, name])
+}
+
 model Transaction {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  clientId      String    @db.ObjectId
-  client        Client    @relation(fields: [clientId], references: [id])
-  number        String
-  date          DateTime
-  type          TransactionType
-  description   String?
-  accountId     String? @db.ObjectId
-  account       Account?   @relation(fields: [accountId], references: [id])
-  debit         Float     @default(0)
-  credit        Float     @default(0)
-  status        TransactionStatus @default(PENDING)
-  reference     String?
-  sourceId      String?   // Reference to NestJS Operation
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  completedAt   DateTime?
-  currency      Currency   @default(USD)
-  exchangeRate  Float?    // Store rate at transaction time
+  id           String            @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String            @db.ObjectId
+  client       Client            @relation(fields: [clientId], references: [id])
+  number       String
+  date         DateTime
+  type         TransactionType
+  description  String?
+  accountId    String?           @db.ObjectId
+  account      Account?          @relation(fields: [accountId], references: [id])
+  debit        Float             @default(0)
+  credit       Float             @default(0)
+  status       TransactionStatus @default(PENDING)
+  reference    String?
+  sourceId     String? // Reference to NestJS Operation
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  completedAt  DateTime?
+  currency     Currency          @default(USD)
+  exchangeRate Float? // Store rate at transaction time
 
   @@unique([clientId, number])
 }
@@ -139,6 +237,21 @@ enum AccountType {
   EQUITY
   REVENUE
   EXPENSE
+}
+
+enum ReturnStatus {
+  PROCESSING
+  APPROVED
+  COMPLETED
+  REJECTED
+}
+
+enum ReturnType {
+  QUALITY_ISSUE
+  SHIPPING_DAMAGE
+  ORDER_ERROR
+  WRONG_ITEM
+  OTHER
 }
 
 enum AccountCategory {
@@ -176,4 +289,31 @@ enum Currency {
   USD
   EUR
   ALL
+}
+
+enum IntegrationType {
+  VENUE_BOOST
+  BANK
+  WEBHOOK
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  PENDING
+  FAILED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  CONFIRMED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum PurchaseOrderPriority {
+  LOW
+  NORMAL
+  HIGH
 }

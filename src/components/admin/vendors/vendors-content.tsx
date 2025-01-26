@@ -336,13 +336,25 @@ const METRIC_CARDS = [
 
      {/* Vendors List */}
      <div className="space-y-4">
-       {loading ? (
-         <div className="text-center py-4">Loading...</div>
-       ) : vendors.length === 0 ? (
-         <div className="text-center py-4 text-muted-foreground">
-           No vendors found
-         </div>
-       ) : vendors.map((vendor) => (
+        {loading ? (
+          <div className="text-center py-4">Loading...</div>
+          ) : vendors.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-4">🏢</div>
+            <h3 className="text-lg font-medium">No vendors found</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Start by adding your first vendor
+            </p>
+            <Button 
+              className="mt-4"
+              style={{ backgroundColor: "#5FC4D0" }}
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Vendor
+            </Button>
+          </div>
+          ) : vendors.map((vendor) => (
          <Card key={vendor.id} className="hover:bg-accent/5 transition-colors">
            <CardContent className="p-6">
              <div className="flex flex-col lg:flex-row gap-6">

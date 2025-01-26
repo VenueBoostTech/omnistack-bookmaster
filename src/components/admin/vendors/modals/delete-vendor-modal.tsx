@@ -20,7 +20,7 @@ export function DeleteVendorModal({ isOpen, onClose, onConfirm, vendorName }: De
           <p>Are you sure you want to delete {vendorName}? This action cannot be undone.</p>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button variant="destructive" onClick={onConfirm}>Delete</Button>
+            <Button variant="default" onClick={onConfirm}>Delete</Button>
           </div>
         </div>
       </DialogContent>
