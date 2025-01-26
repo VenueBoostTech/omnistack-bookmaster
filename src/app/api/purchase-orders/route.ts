@@ -89,45 +89,138 @@ export async function POST(request: Request) {
 }
 
 async function getPurchaseMetrics(clientId: string) {
- const today = new Date();
- const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
- const lastWeek = new Date(today.setDate(today.getDate() - 7));
+  const today = new Date();
+  const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastWeek = new Date(today.setDate(today.getDate() - 7));
+  const twoWeeksAgo = new Date(today.setDate(today.getDate() - 7));
 
- const [totalOrders, pendingOrders, expectedArrivals, purchaseValue] = await Promise.all([
-   prisma.purchaseOrder.count({
-     where: { 
-       clientId,
-       date: { gte: thisMonth }
-     }
-   }),
-   prisma.purchaseOrder.count({
-     where: {
-       clientId,
-       status: 'CONFIRMED'
-     }
-   }),
-   prisma.purchaseOrder.count({
-     where: {
-       clientId,
-       status: 'IN_TRANSIT',
-       expectedDelivery: { gte: today }
-     }
-   }),
-   prisma.purchaseOrder.aggregate({
-     where: {
-       clientId,
-       date: { gte: thisMonth }
-     },
-     _sum: { totalValue: true }
-   })
- ]);
+  const [
+    currentMonthOrders,
+    lastMonthOrders,
+    currentWeekPending,
+    lastWeekPending,
+    expectedArrivals,
+    currentMonthValue,
+    lastMonthValue
+  ] = await Promise.all([
+    prisma.purchaseOrder.count({
+      where: { 
+        clientId,
+        date: { gte: thisMonth }
+      }
+    }),
+    prisma.purchaseOrder.count({
+      where: {
+        clientId,
+        date: {
+          gte: lastMonth,
+          lt: thisMonth
+        }
+      }
+    }),
+    prisma.purchaseOrder.count({
+      where: {
+        clientId,
+        status: 'CONFIRMED',
+        date: { gte: lastWeek }
+      }
+    }),
+    prisma.purchaseOrder.count({
+      where: {
+        clientId,
+        status: 'CONFIRMED',
+        date: {
+          gte: twoWeeksAgo,
+          lt: lastWeek
+        }
+      }
+    }),
+    prisma.purchaseOrder.count({
+      where: {
+        clientId,
+        status: 'IN_TRANSIT',
+        expectedDelivery: { gte: today }
+      }
+    }),
+    prisma.purchaseOrder.aggregate({
+      where: {
+        clientId,
+        date: { gte: thisMonth }
+      },
+      _sum: { totalValue: true }
+    }),
+    prisma.purchaseOrder.aggregate({
+      where: {
+        clientId,
+        date: {
+          gte: lastMonth,
+          lt: thisMonth
+        }
+      },
+      _sum: { totalValue: true }
+    })
+  ]);
 
- return {
-   totalOrders,
-   pendingOrders,
-   expectedArrivals,
-   purchaseValue: purchaseValue._sum.totalValue || 0
- };
+  const expectedArrivalsTrend = calculateTrend(
+    expectedArrivals,
+    await prisma.purchaseOrder.count({
+      where: {
+        clientId,
+        status: 'IN_TRANSIT',
+        expectedDelivery: { 
+          gte: lastWeek,
+          lt: today 
+        }
+      }
+    })
+  );
+
+  // Calculate trends
+  const ordersTrend = calculateTrend(currentMonthOrders, lastMonthOrders);
+  const pendingTrend = calculateTrend(currentWeekPending, lastWeekPending);
+  const valueTrend = calculateTrend(
+    currentMonthValue._sum.totalValue || 0, 
+    lastMonthValue._sum.totalValue || 0
+  );
+
+  return {
+    totalOrders: {
+      value: currentMonthOrders,
+      change: Math.abs(ordersTrend.change),
+      trend: ordersTrend.direction,
+      period: "vs last month"
+    },
+    pendingOrders: {
+      value: currentWeekPending,
+      change: Math.abs(pendingTrend.change),
+      trend: pendingTrend.direction,
+      period: "vs last week"
+    },
+    expectedArrivals: {
+      value: expectedArrivals,
+      change: Math.abs(expectedArrivalsTrend.change),
+      trend: expectedArrivalsTrend.direction,
+      period: "vs last week"
+    },
+    purchaseValue: {
+      value: currentMonthValue._sum.totalValue || 0,
+      change: valueTrend.changePercent,
+      trend: valueTrend.direction,
+      period: "vs last month"
+    }
+  };
+}
+
+function calculateTrend(current: number, previous: number) {
+  const change = current - previous;
+  const changePercent = previous ? Math.round((change / previous) * 100) : 0;
+  
+  return {
+    change,
+    changePercent,
+    direction: change >= 0 ? "up" : "down"
+  };
 }
 
 async function generateOrderNumber(clientId: string) {
