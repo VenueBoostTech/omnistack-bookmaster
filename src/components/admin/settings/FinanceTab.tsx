@@ -22,17 +22,16 @@ const FISCAL_YEAR_OPTIONS = [
   { value: "12", label: "December" },
 ];
 
-export function FinanceTab({
-  initialSettings,
-  onChange,
-}: {
+interface FinanceTabProps {
   initialSettings: FinanceSettings;
   onChange: (updatedSettings: FinanceSettings) => void;
-}) {
+}
+
+export function FinanceTab({ initialSettings, onChange }: FinanceTabProps) {
   const [localSettings, setLocalSettings] = useState(initialSettings);
 
   useEffect(() => {
-    setLocalSettings(initialSettings); // Sync with parent state
+    setLocalSettings(initialSettings);
   }, [initialSettings]);
 
   const handleChange = (field: keyof FinanceSettings) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +40,7 @@ export function FinanceTab({
       [field]: e.target.type === "number" ? Number(e.target.value) : e.target.value,
     };
     setLocalSettings(updatedSettings);
-    onChange(updatedSettings); // Notify parent
+    onChange(updatedSettings);
   };
 
   const handleDocumentSettingChange = (field: keyof FinanceSettings["documentSettings"]) => (
@@ -55,16 +54,16 @@ export function FinanceTab({
       },
     };
     setLocalSettings(updatedSettings);
-    onChange(updatedSettings); // Notify parent
+    onChange(updatedSettings);
   };
 
-  const toggleSetting = (field: keyof FinanceSettings) => () => {
+  const toggleSetting = (setting: keyof FinanceSettings) => {
     const updatedSettings = {
       ...localSettings,
-      [field]: !localSettings[field],
+      [setting]: !localSettings[setting],
     };
     setLocalSettings(updatedSettings);
-    onChange(updatedSettings); // Notify parent
+    onChange(updatedSettings);
   };
 
   return (
@@ -80,19 +79,11 @@ export function FinanceTab({
               label="Fiscal Year Start"
               options={FISCAL_YEAR_OPTIONS}
               value={localSettings.fiscalYearStart}
-              onChange={(e) => {
-                const updatedSettings = { ...localSettings, fiscalYearStart: e.target.value };
-                setLocalSettings(updatedSettings);
-                onChange(updatedSettings); // Notify parent
-              }}
+              onChange={(e) => handleChange("fiscalYearStart")(e as React.ChangeEvent<HTMLInputElement>)}
             />
             <div className="space-y-2">
               <label className="text-sm font-medium">Tax Rate (%)</label>
-              <Input
-                type="number"
-                value={localSettings.taxRate}
-                onChange={handleChange("taxRate")}
-              />
+              <Input type="number" value={localSettings.taxRate} onChange={handleChange("taxRate")} />
             </div>
           </div>
 
@@ -104,7 +95,7 @@ export function FinanceTab({
               </div>
               <Switch
                 checked={localSettings.autoPostTransactions}
-                onCheckedChange={toggleSetting("autoPostTransactions")}
+                onCheckedChange={() => toggleSetting("autoPostTransactions")}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -112,10 +103,7 @@ export function FinanceTab({
                 <div className="text-sm font-medium">Track Cost Centers</div>
                 <div className="text-sm text-muted-foreground">Enable cost center tracking</div>
               </div>
-              <Switch
-                checked={localSettings.trackCostCenters}
-                onCheckedChange={toggleSetting("trackCostCenters")}
-              />
+              <Switch checked={localSettings.trackCostCenters} onCheckedChange={() => toggleSetting("trackCostCenters")} />
             </div>
           </div>
         </CardContent>

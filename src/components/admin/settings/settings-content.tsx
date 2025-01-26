@@ -82,11 +82,20 @@ export function SettingsContent() {
           />
         </TabsContent>
         <TabsContent value="finance" className="space-y-6 mt-6">
-        <FinanceTab
-          initialSettings={localSettings.finance}
-          onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
-        />
-      </TabsContent>
+            <FinanceTab
+              initialSettings={localSettings?.finance || {
+                fiscalYearStart: "01",
+                taxRate: 20,
+                autoPostTransactions: true,
+                trackCostCenters: false,
+                documentSettings: {
+                  invoicePrefix: "INV-",
+                  nextInvoiceNumber: 1001,
+                },
+              }}
+              onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
+            />
+          </TabsContent>
 
 
         <TabsContent value="notifications" className="space-y-6 mt-6">
