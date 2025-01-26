@@ -33,6 +33,9 @@ export async function GET(request: Request) {
    const [users, total, metrics] = await Promise.all([
      prisma.user.findMany({
        where,
+       include: {
+        department: true
+      },
        skip: (page - 1) * pageSize,
        take: pageSize,
      }),
@@ -75,7 +78,8 @@ export async function POST(request: Request) {
           role: body.role,
           clientId: body.clientId,
           password: body.password,
-          supabaseId: data.user.id  // Updated to use correct path
+          supabaseId: data.user.id,
+          departmentId: body.departmentId
         }
       });
    
@@ -91,23 +95,26 @@ export async function POST(request: Request) {
 
 
 async function getUserMetrics(clientId: string) {
-    const [
-      total,
-    //   activeNow,
-    ] = await Promise.all([
-      prisma.user.count({ where: { clientId } }),
-    //   prisma.user.count({ 
-    //     where: { 
-    //       clientId,
-    //       lastActive: { 
-    //         gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-    //       }
-    //     }
-    //   })
-    ]);
+  const [total, withDepartment, withoutDepartment] = await Promise.all([
+    prisma.user.count({ where: { clientId } }),
+    prisma.user.count({ 
+      where: { 
+        clientId,
+        NOT: { departmentId: null }
+      }
+    }),
+    prisma.user.count({ 
+      where: { 
+        clientId,
+        departmentId: null
+      }
+    })
+  ]);
    
-    return {
-      total,
-      activeNow: 0
-    };
-   }
+  return {
+    total,
+    activeNow: 0,
+    withDepartment,
+    withoutDepartment
+  };
+}

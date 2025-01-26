@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Filter, Search, Download, UsersIcon, Shield, Mail, Edit, Key, Trash2 } from "lucide-react";
+import { Plus, Filter, Search, Download, UsersIcon, Shield, Mail, Edit, Key, Trash2, Building2, UserMinus, Users } from "lucide-react";
 import { useClient } from '@/hooks/useClient';
 import { toast } from 'react-hot-toast';
 import { AddUserModal } from './modals/add-user-modal';
 import { DeleteUserModal } from './modals/delete-user-modal';
+import { useRouter } from 'next/navigation';
 
 const USER_ROLES = [
  { value: "ALL", label: "All Users" },
@@ -39,6 +40,10 @@ interface User {
  name: string;
  email: string;
  role: string;
+ departmentId?: string;
+  department?: {
+    name: string;
+  };
  lastAccess?: Date;
  status: string;
 }
@@ -54,10 +59,13 @@ export function UsersContent() {
  const [selectedUser, setSelectedUser] = useState<User | null>(null);
  const [showAddModal, setShowAddModal] = useState(false);
  const [showDeleteModal, setShowDeleteModal] = useState(false);
+ const router = useRouter();
  
  const [metrics, setMetrics] = useState({
    total: 0,
    activeNow: 0,
+   withDepartment: 0,
+   withoutDepartment: 0
  });
 
  const { clientId } = useClient();
@@ -130,6 +138,10 @@ export function UsersContent() {
            <Download className="h-4 w-4 mr-2" />
            Export
          </Button>
+          <Button variant="secondary" onClick={() => router.push('/admin/departments')}>
+            <Building2 className="h-4 w-4 mr-2" /> 
+          Departments
+         </Button>
          <Button onClick={() => setShowAddModal(true)} style={{ backgroundColor: "#5FC4D0" }}>
            <Plus className="h-4 w-4 mr-2" />
            Add User
@@ -165,6 +177,32 @@ export function UsersContent() {
            </div>
          </CardContent>
        </Card>
+       <Card>
+  <CardContent className="p-4">
+    <div className="flex justify-between items-start">
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">Users with Department</p>
+        <p className="text-2xl font-bold">{metrics.withDepartment}</p>
+      </div>
+      <div className="p-2 bg-blue-100 rounded-lg">
+        <Users className="h-5 w-5 text-blue-600" />
+      </div>
+    </div>
+  </CardContent>
+</Card>
+<Card>
+  <CardContent className="p-4">
+    <div className="flex justify-between items-start">
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">Unassigned Users</p>
+        <p className="text-2xl font-bold">{metrics.withoutDepartment}</p>
+      </div>
+      <div className="p-2 bg-yellow-100 rounded-lg">
+        <UserMinus className="h-5 w-5 text-yellow-600" />
+      </div>
+    </div>
+  </CardContent>
+</Card>
      </div>
 
      {/* Filters */}

@@ -31,6 +31,7 @@ model Client {
   updatedAt       DateTime        @updatedAt
   PurchaseOrder   PurchaseOrder[]
   Return          Return[]
+  Department      Department[]
 }
 
 model Integration {
@@ -51,17 +52,19 @@ model Integration {
 }
 
 model User {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  email      String    @unique
-  name       String
-  role       UserRole  @default(USER)
-  password   String?
-  clientId   String    @db.ObjectId
-  client     Client    @relation(fields: [clientId], references: [id])
-  supabaseId String    @unique
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  lastActive DateTime?
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  email        String      @unique
+  name         String
+  role         UserRole    @default(USER)
+  password     String?
+  clientId     String      @db.ObjectId
+  client       Client      @relation(fields: [clientId], references: [id])
+  supabaseId   String      @unique
+  departmentId String?     @db.ObjectId
+  department   Department? @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  lastActive   DateTime?
 }
 
 enum VendorType {
@@ -171,6 +174,18 @@ model PurchaseOrderItem {
   unitPrice       Float
   totalPrice      Float
   notes           String?
+}
+
+model Department {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  clientId  String   @db.ObjectId
+  client    Client   @relation(fields: [clientId], references: [id])
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, name])
 }
 
 model Transaction {
