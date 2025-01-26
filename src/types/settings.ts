@@ -75,4 +75,12 @@ export interface GeneralSettings {
     };
    }
       
+   export interface Settings {
+    general: GeneralSettings;
+    localization: LocalizationSettings;
+    notifications: NotificationSettings;
+    finance: FinanceSettings;
+    integrations: IntegrationSettings;
+    automation: AutomationSettings;
+  }
   

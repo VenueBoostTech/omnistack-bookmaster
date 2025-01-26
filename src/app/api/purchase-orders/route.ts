@@ -3,52 +3,53 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
- const { searchParams } = new URL(request.url);
- const page = Number(searchParams.get('page')) || 1;
- const pageSize = Number(searchParams.get('pageSize')) || 10;
- const search = searchParams.get('search') || '';
- const status = searchParams.get('status');
- const clientId = searchParams.get('clientId')!;
+  const { searchParams } = new URL(request.url);
+  const page = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const search = searchParams.get('search') || '';
+  const status = searchParams.get('status');
+  const clientId = searchParams.get('clientId')!;
 
- try {
-   const where = {
-     clientId,
-     ...(search && {
-       OR: [
-         { number: { contains: search, mode: 'insensitive' } },
-         { vendor: { name: { contains: search, mode: 'insensitive' } } }
-       ]
-     }),
-     ...(status && status !== 'ALL' && { status })
-   };
+  try {
+    const where = {
+      clientId,
+      ...(search && {
+        OR: [
+          { number: { contains: search, mode: 'insensitive' } },
+          { vendor: { name: { contains: search, mode: 'insensitive' } } }
+        ]
+      }),
+      ...(status && status !== 'all' && { status })
+    };
 
-   const [orders, total, metrics] = await Promise.all([
-     prisma.purchaseOrder.findMany({
-       where,
-       skip: (page - 1) * pageSize,
-       take: pageSize,
-       include: {
-         vendor: true,
-         items: true
-       },
-       orderBy: { date: 'desc' }
-     }),
-     prisma.purchaseOrder.count({ where }),
-     getPurchaseMetrics(clientId)
-   ]);
+    const [orders, total, metrics] = await Promise.all([
+      prisma.purchaseOrder.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          vendor: true,
+          items: true
+        },
+        orderBy: { date: 'desc' }
+      }),
+      prisma.purchaseOrder.count({ where }),
+      getPurchaseMetrics(clientId)
+    ]);
 
-   return NextResponse.json({
-     items: orders,
-     total,
-     page,
-     pageSize,
-     totalPages: Math.ceil(total / pageSize),
-     metrics
-   });
+    return NextResponse.json({
+      items: orders,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      metrics
+    });
 
- } catch (error) {
-   return NextResponse.json({ error: 'Failed to fetch purchase orders' }, { status: 500 });
- }
+  } catch (error) {
+    const updatedError = error instanceof Error ? error.message : 'Failed to fetch purchase orders';
+    return NextResponse.json({ error: updatedError }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -82,7 +83,8 @@ export async function POST(request: Request) {
 
    return NextResponse.json(order);
  } catch (error) {
-   return NextResponse.json({ error: 'Failed to create purchase order' }, { status: 500 });
+  const updatedError = error instanceof Error ? error.message : 'Failed to create purchase order';
+   return NextResponse.json({ error: updatedError }, { status: 500 });
  }
 }
 

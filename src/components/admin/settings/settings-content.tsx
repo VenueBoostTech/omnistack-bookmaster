@@ -1,26 +1,52 @@
 "use client";
 
-import { GeneralTab } from './GeneralTab';
-import { FinanceTab } from './FinanceTab';
-import { IntegrationsTab } from './IntegrationsTab';
-import { AutomationTab } from './AutomationTab';
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SaveIcon } from "lucide-react";
-import { useClient } from '@/hooks/useClient';
-import { toast } from 'react-hot-toast';
-import { NotificationsTab } from './NotificationsTab';
-import { LocalizationTab } from './LocalizationTab';
+import { toast } from "react-hot-toast";
+import { GeneralTab } from "./GeneralTab";
+import { FinanceTab } from "./FinanceTab";
+import { useSettings } from "@/hooks/useSettings";
+import { NotificationsTab } from "./NotificationsTab";
+import { LocalizationTab } from "./LocalizationTab";
+import { IntegrationsTab } from "./IntegrationsTab";
+import { AutomationTab } from "./AutomationTab";
+import { Settings } from "@/types/settings";
 
 export function SettingsContent() {
-  const { clientId } = useClient();
+  const { settings, updateSettings } = useSettings();
+  const [localSettings, setLocalSettings] = useState<Settings | null>(null);
+
+  useEffect(() => {
+    setLocalSettings(settings); // Sync with the context when settings change
+  }, [settings]);
+
+  const handleTabChange = (section: keyof Settings, updatedSection: any) => {
+    if (localSettings) {
+      setLocalSettings({
+        ...localSettings,
+        [section]: updatedSection,
+      });
+    }
+  };
 
   const handleSave = async () => {
     try {
-      // Save all settings here
-      toast.success('Settings saved successfully');
+      if (!localSettings) {
+        throw new Error("No settings available to save");
+      }
+  
+      // Use `Object.keys` with type assertion
+      for (const section of Object.keys(localSettings) as (keyof Settings)[]) {
+        const sectionData = localSettings[section];
+        if (sectionData) {
+          await updateSettings(section, sectionData);
+        }
+      }
+      toast.success("Settings saved successfully");
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error(error instanceof Error ? error.message : "Failed to save settings");
     }
   };
 
@@ -50,9 +76,11 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-          <GeneralTab />
+        <GeneralTab
+            initialSettings={localSettings?.general || { companyName: '', taxId: '', address: '', phone: '' }}
+            onChange={(updatedGeneral) => handleTabChange("general", updatedGeneral)}
+          />
         </TabsContent>
-
         <TabsContent value="finance" className="space-y-6 mt-6">
           <FinanceTab />
         </TabsContent>
