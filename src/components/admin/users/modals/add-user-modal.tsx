@@ -1,11 +1,11 @@
 // components/modals/add-user-modal.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useClient } from '@/hooks/useClient';
 import { toast } from 'react-hot-toast';
+import InputSelect from '@/components/Common/InputSelect';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -16,13 +16,27 @@ interface AddUserModalProps {
 export function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
   const [loading, setLoading] = useState(false);
   const { clientId } = useClient();
+  const [departments, setDepartments] = useState<{id: string, name: string}[]>([]);
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const res = await fetch(`/api/departments?clientId=${clientId}`);
+      const data = await res.json();
+      setDepartments(data.items);
+    };
+    
+    fetchDepartments();
+  }, [clientId]);
   
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     role: 'USER',
-    password: ''
+    password: '',
+    departmentId: ''
   });
+
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,20 +90,35 @@ export function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) 
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Role</label>
-            <Select 
+            <InputSelect
+              label=""
+              name="role"
               value={formData.role}
-              onValueChange={(value) => setFormData({ ...formData, role: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ADMIN">Administrator</SelectItem>
-                <SelectItem value="MANAGER">Manager</SelectItem>
-                <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
-                <SelectItem value="USER">User</SelectItem>
-              </SelectContent>
-            </Select>
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              options={[
+                { value: "ADMIN", label: "Administrator" },
+                { value: "MANAGER", label: "Manager" },
+                { value: "ACCOUNTANT", label: "Accountant" },
+                { value: "USER", label: "User" }
+              ]}
+            />
+            </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Department</label>
+            <InputSelect
+              label=""
+              name="department"
+              value={formData.departmentId}
+              onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+              options={[
+                { value: "", label: "No Department" },
+                ...(departments?.length ? departments.map(d => ({
+                  value: d.id,
+                  label: d.name
+                })) : [])
+              ]}
+            />
           </div>
 
           <div className="space-y-2">
