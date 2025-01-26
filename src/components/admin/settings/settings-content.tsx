@@ -134,8 +134,31 @@ export function SettingsContent() {
 
 
         <TabsContent value="automation" className="space-y-6 mt-6">
-          <AutomationTab />
+          <AutomationTab
+            initialSettings={localSettings?.automation || {
+              autoStockReorder: {
+                enabled: false,
+                threshold: 10,
+                suppliers: [],
+              },
+              dailyBackup: {
+                enabled: true,
+                time: "00:00",
+                retentionDays: 30,
+              },
+              reportGeneration: {
+                enabled: false,
+                schedule: {
+                  frequency: "daily",
+                  time: "06:00",
+                },
+                reports: [],
+              },
+            }}
+            onChange={(updatedAutomation) => handleTabChange("automation", updatedAutomation)}
+          />
         </TabsContent>
+
       </Tabs>
     </div>
   );
