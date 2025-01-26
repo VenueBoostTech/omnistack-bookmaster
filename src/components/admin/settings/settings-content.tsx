@@ -82,28 +82,83 @@ export function SettingsContent() {
           />
         </TabsContent>
         <TabsContent value="finance" className="space-y-6 mt-6">
-        <FinanceTab
-          initialSettings={localSettings.finance}
-          onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
-        />
-      </TabsContent>
+            <FinanceTab
+              initialSettings={localSettings?.finance || {
+                fiscalYearStart: "01",
+                taxRate: 20,
+                autoPostTransactions: true,
+                trackCostCenters: false,
+                documentSettings: {
+                  invoicePrefix: "INV-",
+                  nextInvoiceNumber: 1001,
+                },
+              }}
+              onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
+            />
+          </TabsContent>
 
 
-        <TabsContent value="notifications" className="space-y-6 mt-6">
-          <NotificationsTab />
+          <TabsContent value="notifications" className="space-y-6 mt-6">
+            <NotificationsTab
+              initialSettings={localSettings?.notifications || {
+                emailNotifications: true,
+                lowStockAlerts: true,
+                transactionAlerts: true,
+              }}
+              onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
+            />
+          </TabsContent>
+
+          <TabsContent value="localizations" className="space-y-6 mt-6">
+            <LocalizationTab
+              initialSettings={localSettings?.localization || {
+                language: "en",
+                currency: "ALL",
+                dateFormat: "dd/mm/yyyy",
+                timezone: "europe-tirana",
+              }}
+              onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
+            />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6 mt-6">
+          <IntegrationsTab
+            initialSettings={localSettings?.integrations || {
+              venueBoost: { enabled: false },
+              bankIntegration: { enabled: false },
+              webhooks: { endpoints: [] },
+            }}
+            onChange={(updatedIntegrations) => handleTabChange("integrations", updatedIntegrations)}
+          />
         </TabsContent>
 
-        <TabsContent value="localizations" className="space-y-6 mt-6">
-          <LocalizationTab />
-        </TabsContent>
-
-        <TabsContent value="integrations" className="space-y-6 mt-6">
-          <IntegrationsTab />
-        </TabsContent>
 
         <TabsContent value="automation" className="space-y-6 mt-6">
-          <AutomationTab />
+          <AutomationTab
+            initialSettings={localSettings?.automation || {
+              autoStockReorder: {
+                enabled: false,
+                threshold: 10,
+                suppliers: [],
+              },
+              dailyBackup: {
+                enabled: true,
+                time: "00:00",
+                retentionDays: 30,
+              },
+              reportGeneration: {
+                enabled: false,
+                schedule: {
+                  frequency: "daily",
+                  time: "06:00",
+                },
+                reports: [],
+              },
+            }}
+            onChange={(updatedAutomation) => handleTabChange("automation", updatedAutomation)}
+          />
         </TabsContent>
+
       </Tabs>
     </div>
   );
