@@ -109,9 +109,17 @@ export function SettingsContent() {
             />
           </TabsContent>
 
-        <TabsContent value="localizations" className="space-y-6 mt-6">
-          <LocalizationTab />
-        </TabsContent>
+          <TabsContent value="localizations" className="space-y-6 mt-6">
+            <LocalizationTab
+              initialSettings={localSettings?.localization || {
+                language: "en",
+                currency: "ALL",
+                dateFormat: "dd/mm/yyyy",
+                timezone: "europe-tirana",
+              }}
+              onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
+            />
+          </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6 mt-6">
           <IntegrationsTab />
