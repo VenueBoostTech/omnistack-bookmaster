@@ -30,6 +30,7 @@ model Client {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   PurchaseOrder   PurchaseOrder[]
+  Return          Return[]
 }
 
 model Integration {
@@ -89,6 +90,7 @@ model Vendor {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   PurchaseOrder PurchaseOrder[]
+  Return        Return[]
 
   @@unique([clientId, code])
 }
@@ -129,6 +131,35 @@ model PurchaseOrder {
   notes            String?
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
+}
+
+model Return {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String       @db.ObjectId
+  client       Client       @relation(fields: [clientId], references: [id])
+  number       String       @unique
+  date         DateTime
+  vendorId     String       @db.ObjectId
+  vendor       Vendor       @relation(fields: [vendorId], references: [id])
+  items        ReturnItem[]
+  status       ReturnStatus @default(PROCESSING)
+  type         ReturnType
+  reason       String
+  creditStatus String       @default("PENDING")
+  totalValue   Float        @default(0)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model ReturnItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  returnId  String  @db.ObjectId
+  return    Return  @relation(fields: [returnId], references: [id])
+  productId String
+  quantity  Int
+  reason    String?
+  notes     String?
 }
 
 model PurchaseOrderItem {
@@ -191,6 +222,21 @@ enum AccountType {
   EQUITY
   REVENUE
   EXPENSE
+}
+
+enum ReturnStatus {
+  PROCESSING
+  APPROVED
+  COMPLETED
+  REJECTED
+}
+
+enum ReturnType {
+  QUALITY_ISSUE
+  SHIPPING_DAMAGE
+  ORDER_ERROR
+  WRONG_ITEM
+  OTHER
 }
 
 enum AccountCategory {

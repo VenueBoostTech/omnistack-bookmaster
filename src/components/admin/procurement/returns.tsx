@@ -1,16 +1,19 @@
 "use client"
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useCallback, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import InputSelect from "@/components/Common/InputSelect";
+import { toast } from 'react-hot-toast';
+import { useClient } from '@/hooks/useClient';
+import { AddReturnModal } from '../returns/modals/add-return-modal';
+import { DeleteReturnModal } from '../returns/modals/delete-return-modal';
 import {
   ArrowLeftRight,
   Search,
-  Filter,
   Plus,
   FileSpreadsheet,
   MoreVertical,
@@ -27,7 +30,8 @@ import {
   AlertCircle,
   Wallet,
   ClipboardList,
-  Info
+  Info,
+  Trash2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,120 +41,169 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const RETURNS_METRICS = [
-  {
-    title: "Active Returns",
-    value: "24",
-    change: "+5",
-    trend: "up",
-    period: "this month",
-    icon: ArrowLeftRight
-  },
-  {
-    title: "Pending Credit",
-    value: "€4,850",
-    change: "+12.5%",
-    trend: "up",
-    period: "vs last month",
-    icon: Wallet
-  },
-  {
-    title: "Items Returned",
-    value: "156",
-    change: "-8",
-    trend: "down",
-    period: "this month",
-    icon: Package
-  },
-  {
-    title: "Processing Time",
-    value: "3.2 days",
-    change: "-0.5",
-    trend: "up",
-    period: "on average",
-    icon: RefreshCw
-  }
-];
+interface MetricItem {
+  value: number;
+  change: number;
+  trend: 'up' | 'down';
+  period: string;
+}
 
-const RETURNS = [
-  {
-    id: "RET-2024-001",
-    date: "2024-01-20",
-    vendor: {
-      name: "Office Solutions Ltd",
-      rating: 4.5
-    },
-    warehouse: "Main Warehouse",
-    purchaseOrder: "PO-2024-015",
-    items: 5,
-    value: 850.00,
-    status: "PROCESSING",
-    reason: "Defective Items",
-    creditStatus: "PENDING",
-    type: "Quality Issue",
-    notes: "Multiple chairs with manufacturing defects"
-  },
-  {
-    id: "RET-2024-002",
-    date: "2024-01-19",
-    vendor: {
-      name: "Tech Supplies Co",
-      rating: 4.2
-    },
-    warehouse: "South Branch",
-    purchaseOrder: "PO-2024-012",
-    items: 2,
-    value: 350.00,
-    status: "APPROVED",
-    reason: "Wrong Specifications",
-    creditStatus: "APPROVED",
-    type: "Order Error",
-    notes: "Items don't match order specifications"
-  },
-  {
-    id: "RET-2024-003",
-    date: "2024-01-18",
-    vendor: {
-      name: "Global Trading Inc",
-      rating: 3.8
-    },
-    warehouse: "East Storage",
-    purchaseOrder: "PO-2024-010",
-    items: 8,
-    value: 1200.00,
-    status: "COMPLETED",
-    reason: "Damaged in Transit",
-    creditStatus: "RECEIVED",
-    type: "Shipping Damage",
-    notes: "Items received with visible shipping damage"
-  }
-];
+interface ReturnMetrics {
+  activeReturns: MetricItem;
+  pendingCredit: MetricItem;
+  totalItems: MetricItem;
+  processingTime: MetricItem;
+}
 
-const getStatusBadge = (status: string) => {
-  const variants = {
-    'COMPLETED': 'bg-green-100 text-green-800',
-    'APPROVED': 'bg-blue-100 text-blue-800',
-    'PROCESSING': 'bg-yellow-100 text-yellow-800',
-    'REJECTED': 'bg-red-100 text-red-800'
+interface ReturnItem {
+  id: string;
+  number: string;
+  date: string;
+  vendor: {
+    name: string;
   };
-  return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
-};
-
-const getCreditStatusBadge = (status: string) => {
-  const variants = {
-    'RECEIVED': 'bg-green-100 text-green-800',
-    'APPROVED': 'bg-blue-100 text-blue-800',
-    'PENDING': 'bg-yellow-100 text-yellow-800',
-    'REJECTED': 'bg-red-100 text-red-800'
-  };
-  return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
-};
+  warehouse?: string;
+  purchaseOrder: string;
+  items: any[];
+  totalValue: number;
+  status: string;
+  reason: string;
+  creditStatus: string;
+  type: string;
+  notes?: string;
+}
 
 export function ReturnsContent() {
+  const { clientId } = useClient();
+  const [returns, setReturns] = useState<ReturnItem[]>([]);
+  const [metrics, setMetrics] = useState<ReturnMetrics>({
+    activeReturns: { value: 0, change: 0, trend: 'up', period: '' },
+    pendingCredit: { value: 0, change: 0, trend: 'up', period: '' },
+    totalItems: { value: 0, change: 0, trend: 'up', period: '' },
+    processingTime: { value: 0, change: 0, trend: 'up', period: '' }
+  });  
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const totalItems = 100; // Replace with actual total
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState({
+    search: '',
+    vendor: 'all',
+    status: 'all',
+    type: 'all'
+  });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedReturn, setSelectedReturn] = useState<ReturnItem | null>(null);
+
+  const fetchReturns = useCallback(async () => {
+    if (!clientId) return;
+    
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        clientId,
+        search: filters.search,
+        status: filters.status,
+        type: filters.type
+      });
+
+      const res = await fetch(`/api/returns?${params}`);
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error);
+      
+      setReturns(data.items);
+      setTotal(data.total);
+      setMetrics(data.metrics);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to fetch returns");
+    } finally {
+      setLoading(false);
+    }
+  }, [clientId, page, pageSize, filters]);
+
+  useEffect(() => {
+    fetchReturns();
+  }, [fetchReturns]);
+
+  const handleDelete = async () => {
+    if (!selectedReturn) return;
+
+    try {
+      const res = await fetch(`/api/returns/${selectedReturn.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Failed to delete return');
+
+      toast.success('Return deleted');
+      fetchReturns();
+    } catch (error) {
+      toast.error('Failed to delete return');
+    }
+    setShowDeleteModal(false);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      'COMPLETED': 'bg-green-100 text-green-800',
+      'APPROVED': 'bg-blue-100 text-blue-800',
+      'PROCESSING': 'bg-yellow-100 text-yellow-800',
+      'REJECTED': 'bg-red-100 text-red-800'
+    };
+    return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getCreditStatusBadge = (status: string) => {
+    const variants = {
+      'RECEIVED': 'bg-green-100 text-green-800',
+      'APPROVED': 'bg-blue-100 text-blue-800',
+      'PENDING': 'bg-yellow-100 text-yellow-800',
+      'REJECTED': 'bg-red-100 text-red-800'
+    };
+    return variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800';
+  };
+
+  const METRIC_CARDS = [
+    {
+      title: "Active Returns",
+      value: metrics.activeReturns.value,
+      change: metrics.activeReturns.change.toString(),
+      trend: metrics.activeReturns.trend,
+      period: metrics.activeReturns.period,
+      icon: ArrowLeftRight
+    },
+    {
+      title: "Pending Credit",
+      value: `€${metrics.pendingCredit.value.toLocaleString()}`,
+      change: `${metrics.pendingCredit.change}%`,
+      trend: metrics.pendingCredit.trend,
+      period: metrics.pendingCredit.period,
+      icon: Wallet
+    },
+    {
+      title: "Items Returned",
+      value: metrics.totalItems.value,
+      change: metrics.totalItems.change.toString(),
+      trend: metrics.totalItems.trend,
+      period: metrics.totalItems.period,
+      icon: Package
+    },
+    {
+      title: "Processing Time",
+      value: `${metrics.processingTime.value.toFixed(1)} days`,
+      change: metrics.processingTime.change.toFixed(1),
+      trend: metrics.processingTime.trend,
+      period: metrics.processingTime.period,
+      icon: RefreshCw
+    }
+  ];
+
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -166,7 +219,10 @@ export function ReturnsContent() {
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button style={{ backgroundColor: "#5FC4D0" }}>
+          <Button 
+            onClick={() => setShowAddModal(true)}
+            style={{ backgroundColor: "#5FC4D0" }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Return
           </Button>
@@ -175,7 +231,7 @@ export function ReturnsContent() {
 
       {/* Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {RETURNS_METRICS.map((metric) => (
+        {METRIC_CARDS.map((metric) => (
           <Card key={metric.title}>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -224,41 +280,32 @@ export function ReturnsContent() {
                 <Input 
                   placeholder="Search returns by ID, vendor, or reason..." 
                   className="pl-9 w-full"
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 />
               </div>
               <InputSelect
-                name="vendor"
-                label=""
-                value="all"
-                onChange={() => {}}
-                options={[
-                  { value: "all", label: "All Vendors" },
-                  { value: "office", label: "Office Solutions" },
-                  { value: "tech", label: "Tech Supplies" }
-                ]}
-              />
-              <InputSelect
                 name="status"
                 label=""
-                value="all"
-                onChange={() => {}}
+                value={filters.status}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                 options={[
                   { value: "all", label: "All Status" },
-                  { value: "processing", label: "Processing" },
-                  { value: "approved", label: "Approved" },
-                  { value: "completed", label: "Completed" }
+                  { value: "PROCESSING", label: "Processing" },
+                  { value: "APPROVED", label: "Approved" },
+                  { value: "COMPLETED", label: "Completed" }
                 ]}
               />
               <InputSelect
                 name="type"
                 label=""
-                value="all"
-                onChange={() => {}}
+                value={filters.type}
+                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                 options={[
                   { value: "all", label: "All Types" },
-                  { value: "quality", label: "Quality Issue" },
-                  { value: "damage", label: "Shipping Damage" },
-                  { value: "error", label: "Order Error" }
+                  { value: "QUALITY_ISSUE", label: "Quality Issue" },
+                  { value: "SHIPPING_DAMAGE", label: "Shipping Damage" },
+                  { value: "ORDER_ERROR", label: "Order Error" }
                 ]}
               />
             </div>
@@ -268,125 +315,168 @@ export function ReturnsContent() {
 
       {/* Returns List */}
       <div className="space-y-4">
-        {RETURNS.map((returnItem) => (
-          <Card key={returnItem.id} className="hover:bg-accent/5 transition-colors">
+        {loading ? (
+          <Card>
+            <CardContent className="p-6 text-center">Loading...</CardContent>
+          </Card>
+        ) : returns.length === 0 ? (
+          <Card>
             <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Left Column - Basic Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{returnItem.id}</h3>
-                        <Badge variant="outline">{returnItem.type}</Badge>
-                        <Badge className={getStatusBadge(returnItem.status)}>
-                          {returnItem.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-4 w-4" />
-                          {returnItem.vendor.name}
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <Store className="h-4 w-4" />
-                          {returnItem.warehouse}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <div className="flex items-center gap-1">
-                          <ClipboardList className="h-4 w-4" />
-                          PO: {returnItem.purchaseOrder}
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <History className="h-4 w-4 mr-2" />
-                          Track Status
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Documents
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                {/* Center Column - Return Details */}
-                <div className="flex-1">
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Items</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{returnItem.items} items</span>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Value</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Wallet className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">€{returnItem.value.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Reason</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                        <span>{returnItem.reason}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Badge className={getCreditStatusBadge(returnItem.creditStatus)}>
-                        Credit {returnItem.creditStatus}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column - Notes & Date */}
-                <div className="w-48">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Return Date</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(returnItem.date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Notes</p>
-                      <div className="flex items-start gap-2 mt-1">
-                        <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                        <p className="text-sm">{returnItem.notes}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">📦</div>
+                <h3 className="text-lg font-medium">No returns found</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Start by creating your first return request
+                </p>
+                <Button 
+                  className="mt-4"
+                  style={{ backgroundColor: "#5FC4D0" }}
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Return
+                </Button>
               </div>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          returns.map((returnItem) => (
+            <Card key={returnItem.id} className="hover:bg-accent/5 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Left Column - Basic Info */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-lg">{returnItem.number}</h3>
+                          <Badge variant="outline">{returnItem.type}</Badge>
+                          <Badge className={getStatusBadge(returnItem.status)}>
+                            {returnItem.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-4 w-4" />
+                            {returnItem.vendor.name}
+                          </div>
+                          {returnItem.warehouse && (
+                            <>
+                              <span>•</span>
+                              <div className="flex items-center gap-1">
+                                <Store className="h-4 w-4" />
+                                {returnItem.warehouse}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <div className="flex items-center gap-1">
+                            <ClipboardList className="h-4 w-4" />
+                            PO: {returnItem.purchaseOrder}
+                          </div>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <History className="h-4 w-4 mr-2" />
+                            Track Status
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Documents
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => {
+                              setSelectedReturn(returnItem);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Return
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* Center Column - Return Details */}
+                  <div className="flex-1">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+
+                        <p className="text-sm text-muted-foreground">Items</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{returnItem.items.length} items</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Value</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Wallet className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">€{returnItem.totalValue.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Reason</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                          <span>{returnItem.reason}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Badge className={getCreditStatusBadge(returnItem.creditStatus)}>
+                          Credit {returnItem.creditStatus}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Notes & Date */}
+                  <div className="w-48">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Return Date</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>{new Date(returnItem.date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      {returnItem.notes && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Notes</p>
+                          <div className="flex items-start gap-2 mt-1">
+                            <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+                            <p className="text-sm">{returnItem.notes}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Pagination */}
-      {/* Updated Pagination */}
       <div className="border-t px-4 py-4 flex items-center justify-between bg-white">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
@@ -443,9 +533,21 @@ export function ReturnsContent() {
           </Button>
         </div>
       </div>
-     </div>
- );
+
+      <AddReturnModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchReturns}
+      />
+
+      <DeleteReturnModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        returnId={selectedReturn?.number}
+      />
+    </div>
+  );
 }
 
 export default ReturnsContent;
-    
