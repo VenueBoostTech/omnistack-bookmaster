@@ -130,7 +130,7 @@ export const getSidebarDataForType = (): {
     },
     {
       id: 8,
-      title: "Operations",
+      title: "Procedures",
       path: "/admin/procurement/operations",
       icon: <ClipboardList className="w-5 h-5"/>,
       children: [
