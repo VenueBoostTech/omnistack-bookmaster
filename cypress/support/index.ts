@@ -1,1 +1,2 @@
-import './commands';
+import './commands'
+import './e2e'

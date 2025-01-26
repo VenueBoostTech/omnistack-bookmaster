@@ -1,6 +1,17 @@
-Cypress.Commands.add('login', (email: string, password: string) => {
-  cy.visit('/login');
-  cy.get('input[name="email"]').type(email);
-  cy.get('input[name="password"]').type(password);
-  cy.get('button[type="submit"]').click();
-});
+// cypress/support/commands.ts
+Cypress.Commands.add('loginSession', () => {
+  const email = Cypress.env('TEST_EMAIL');
+  const password = Cypress.env('TEST_PASSWORD');
+ 
+  cy.session('user', () => {
+    cy.visit('/auth/login');
+    cy.get('input[type="email"]').type(email);
+    cy.get('input[type="password"]').type(password); 
+    cy.get('button[type="submit"]').click();
+    cy.url().should('include', '/admin');
+  }, {
+    validate() {
+      cy.getCookie('next-auth.session-token').should('exist');
+    }
+  });
+ });
