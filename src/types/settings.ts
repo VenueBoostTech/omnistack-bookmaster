@@ -18,4 +18,16 @@ export interface GeneralSettings {
     lowStockAlerts: boolean;
     transactionAlerts: boolean;
    }
+
+   export interface FinanceSettings {
+    fiscalYearStart: string;
+    taxRate: number;
+    autoPostTransactions: boolean;
+    trackCostCenters: boolean;
+    documentSettings: {
+      invoicePrefix: string;
+      nextInvoiceNumber: number;
+    }
+   }
+   
   
