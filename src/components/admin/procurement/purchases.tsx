@@ -30,22 +30,30 @@ interface PurchaseOrder {
  priority: string;
 }
 
+interface MetricItem {
+  value: number;
+  change: number;
+  trend: 'up' | 'down';
+  period: string;
+}
+
 interface PurchaseMetrics {
- totalOrders: number;
- pendingOrders: number;
- expectedArrivals: number;
- purchaseValue: number;
+  totalOrders: MetricItem;
+  pendingOrders: MetricItem;
+  expectedArrivals: MetricItem;
+  purchaseValue: MetricItem;
 }
 
 export function PurchasesContent() {
  const { clientId } = useClient();
  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
  const [metrics, setMetrics] = useState<PurchaseMetrics>({
-   totalOrders: 0,
-   pendingOrders: 0,
-   expectedArrivals: 0,
-   purchaseValue: 0
- });
+  totalOrders: { value: 0, change: 0, trend: 'up', period: '' },
+  pendingOrders: { value: 0, change: 0, trend: 'up', period: '' },
+  expectedArrivals: { value: 0, change: 0, trend: 'up', period: '' },
+  purchaseValue: { value: 0, change: 0, trend: 'up', period: '' }
+});
+
  const [loading, setLoading] = useState(true);
  const [page, setPage] = useState(1);
  const [pageSize, setPageSize] = useState(10);
@@ -133,40 +141,41 @@ const getPaymentStatusColor = (status: string) => {
    setShowDeleteModal(false);
  };
 
+ 
  const METRIC_CARDS = [
-   {
-     title: "Total Orders",
-     value: metrics.totalOrders,
-     change: "+12",
-     trend: "up",
-     period: "this month",
-     icon: ShoppingCart
-   },
-   {
-     title: "Pending Orders",
-     value: metrics.pendingOrders,
-     change: "-3",
-     trend: "down", 
-     period: "vs last week",
-     icon: Clock
-   },
-   {
-     title: "Expected Arrivals",
-     value: metrics.expectedArrivals,
-     change: "+4",
-     trend: "up",
-     period: "this week",
-     icon: Truck
-   },
-   {
-     title: "Purchase Value",
-     value: `€${metrics.purchaseValue.toLocaleString()}`,
-     change: "+15.2%",
-     trend: "up",
-     period: "this month",
-     icon: CreditCard
-   }
- ];
+  {
+    title: "Total Orders",
+    value: metrics.totalOrders.value,
+    change: metrics.totalOrders.change.toString(),
+    trend: metrics.totalOrders.trend,
+    period: metrics.totalOrders.period,
+    icon: ShoppingCart
+  },
+  {
+    title: "Pending Orders",
+    value: metrics.pendingOrders.value,
+    change: metrics.pendingOrders.change.toString(),
+    trend: metrics.pendingOrders.trend,
+    period: metrics.pendingOrders.period,
+    icon: Clock
+  },
+  {
+    title: "Expected Arrivals",
+    value: metrics.expectedArrivals.value,
+    change: metrics.expectedArrivals.change.toString(),
+    trend: metrics.expectedArrivals.trend,
+    period: metrics.expectedArrivals.period,
+    icon: Truck
+  },
+  {
+    title: "Purchase Value",
+    value: `€${metrics.purchaseValue.value.toLocaleString()}`,
+    change: `${metrics.purchaseValue.change}%`,
+    trend: metrics.purchaseValue.trend,
+    period: metrics.purchaseValue.period,
+    icon: CreditCard
+  }
+];
 
  return (
    <div className="space-y-6">
