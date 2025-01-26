@@ -82,8 +82,12 @@ export function SettingsContent() {
           />
         </TabsContent>
         <TabsContent value="finance" className="space-y-6 mt-6">
-          <FinanceTab />
-        </TabsContent>
+        <FinanceTab
+          initialSettings={localSettings.finance}
+          onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
+        />
+      </TabsContent>
+
 
         <TabsContent value="notifications" className="space-y-6 mt-6">
           <NotificationsTab />
