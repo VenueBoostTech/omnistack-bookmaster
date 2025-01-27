@@ -15,12 +15,15 @@ import { AutomationTab } from "./AutomationTab";
 import { Settings } from "@/types/settings";
 import { useRouter } from "next/navigation";
 import { useClient } from '@/hooks/useClient';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SettingsContent() {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, isLoading } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
   const [clientData, setClientData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { clientId } = useClient();
 
   useEffect(() => {
@@ -31,6 +34,7 @@ export function SettingsContent() {
 
   const handleSave = async () => {
     try {
+      setIsSaving(true);
       // Save client data first
       if (clientData) {
         const clientRes = await fetch('/api/profile', {
@@ -53,6 +57,8 @@ export function SettingsContent() {
       toast.success("All settings saved successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save settings");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -68,6 +74,33 @@ export function SettingsContent() {
       setLocalSettings(updatedSettings);
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-96 mt-2" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!localSettings) return null;
 
@@ -85,13 +118,18 @@ export function SettingsContent() {
             variant="outline" 
             onClick={() => router.push('/admin/profile')}
             className="mb-4"
+            disabled={isSaving}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Profile
           </Button>
-          <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
+          <Button 
+            onClick={handleSave} 
+            style={{ backgroundColor: "#5FC4D0" }}
+            disabled={isSaving}
+          >
             <SaveIcon className="h-4 w-4 mr-2" />
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
