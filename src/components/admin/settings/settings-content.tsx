@@ -116,7 +116,7 @@ export function SettingsContent() {
         <TabsContent value="finance" className="space-y-6 mt-6">
           <FinanceTab
             settings={localSettings?.finance}
-            onChange={(updated) => setLocalSettings({ ...localSettings, finance: updated })}
+            onChange={(updated) => handleTabChange('finance', updated)}
           />
         </TabsContent>
 
@@ -130,7 +130,7 @@ export function SettingsContent() {
         <TabsContent value="localizations" className="space-y-6 mt-6">
           <LocalizationTab
             settings={localSettings?.localization}
-            onChange={(updated) => setLocalSettings({ ...localSettings, localization: updated })}
+            onChange={(updated) => handleTabChange('localization', updated)}
           />
         </TabsContent>
 
