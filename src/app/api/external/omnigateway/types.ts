@@ -113,3 +113,79 @@ export interface SimpleImportProductsPayload {
     type: string;
     brandId: string;
 }
+
+export interface CreateWarehousePayload {
+  name: string;
+  address?: string;
+  type?: string;
+  status?: 'active' | 'inactive';
+}
+
+export interface UpdateWarehousePayload {
+  name?: string;
+  address?: string;
+  type?: string;
+  status?: 'active' | 'inactive';
+}
+
+
+export enum BatchStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  EXPIRED = 'expired',
+  PROCESSED = 'processed',
+  CANCELLED = 'cancelled'
+}
+
+export interface BatchParams {
+  page?: number;
+  limit?: number;
+  status?: BatchStatus;
+  warehouseId?: string;
+  productId?: string;
+  batchNumber?: string;
+}
+
+export interface CreateBatchPayload {
+  warehouseId: string;
+  productId: string;
+  batchNumber: string;
+  quantity: number;
+  status?: BatchStatus;
+  expiryDate?: Date;
+}
+
+export interface UpdateBatchPayload {
+  quantity?: number;
+  status?: BatchStatus;
+  expiryDate?: Date;
+}
+
+export interface Batch {
+  id: string;
+  clientId: string;
+  warehouseId: string;
+  productId: string;
+  batchNumber: string;
+  quantity: number;
+  status: BatchStatus;
+  expiryDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  product?: {
+      name: string;
+      code: string;
+  };
+  warehouse?: {
+      name: string;
+      code: string;
+  };
+}
+
+export interface BatchResponse {
+  items: Batch[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
