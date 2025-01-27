@@ -18,14 +18,6 @@ export async function GET(request: Request) {
 
     // Initialize default settings if none exist
     const settings = client?.settings || {
-      general: {
-        name: '',
-        code: '',
-        taxId: null,
-        address: null,
-        phone: null,
-        email: null
-      },
       finance: {
         fiscalYearStart: null,
         defaultCurrency: 'USD',

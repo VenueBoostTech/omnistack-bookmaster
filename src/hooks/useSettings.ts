@@ -1,38 +1,50 @@
-import { useEffect } from "react";
-
-import { useState } from "react";
+// hooks/useSettings.ts
+import { useEffect, useState } from "react";
 import { useClient } from "./useClient";
 import { Settings } from "@/types/settings";
+import { toast } from "react-hot-toast";
 
-// hooks/useSettings.ts
 export function useSettings() {
     const { clientId } = useClient();
     const [settings, setSettings] = useState<Settings | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
   
     const fetchSettings = async () => {
-      const res = await fetch(`/api/settings?clientId=${clientId}`);
-      const data = await res.json();
-      setSettings(data);
+      try {
+        const res = await fetch(`/api/settings?clientId=${clientId}`);
+        if (!res.ok) throw new Error('Failed to fetch settings');
+        const data = await res.json();
+        setSettings(data);
+      } catch (error) {
+        toast.error('Failed to fetch settings');
+      } finally {
+        setIsLoading(false);
+      }
     };
   
-    const updateSettings = async (section: keyof Settings, newData: any) => {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          clientId,
-          section,
-          data: newData
-        })
-      });
-      
-      if (!res.ok) throw new Error('Failed to update settings');
-      await fetchSettings();
+    const updateSettings = async (newSettings: Settings) => {
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            clientId,
+            settings: newSettings
+          })
+        });
+        
+        if (!res.ok) throw new Error('Failed to update settings');
+        const data = await res.json();
+        setSettings(data);
+        return data;
+      } catch (error) {
+        throw new Error('Failed to update settings');
+      }
     };
   
     useEffect(() => {
       if (clientId) fetchSettings();
     }, [clientId]);
   
-    return { settings, updateSettings };
-  }
+    return { settings, isLoading, updateSettings };
+}

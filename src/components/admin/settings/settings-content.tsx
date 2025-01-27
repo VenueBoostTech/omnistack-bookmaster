@@ -31,9 +31,9 @@ export function SettingsContent() {
 
   const handleSave = async () => {
     try {
-      // Save client data
+      // Save client data first
       if (clientData) {
-        const clientRes = await fetch('/api/client', {
+        const clientRes = await fetch('/api/profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -45,18 +45,33 @@ export function SettingsContent() {
         if (!clientRes.ok) throw new Error('Failed to update client');
       }
 
-      // Save other settings
+      // Then save settings
       if (localSettings) {
         await updateSettings(localSettings);
       }
       
-      toast.success("Settings saved successfully");
+      toast.success("All settings saved successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save settings");
     }
   };
 
   if (!localSettings) return null;
+
+  const handleTabChange = (section: keyof Settings, newData: any) => {
+    if (!localSettings) return;
+    
+    const updatedSettings = {
+      ...localSettings,
+      [section]: newData
+    };
+    
+    // Using requestAnimationFrame to avoid React state update warning
+    requestAnimationFrame(() => {
+      setLocalSettings(updatedSettings);
+    });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -106,9 +121,9 @@ export function SettingsContent() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6 mt-6">
-          <NotificationsTab
+            <NotificationsTab
             settings={localSettings?.notifications}
-            onChange={(updated) => setLocalSettings({ ...localSettings, notifications: updated })}
+            onChange={(updated) => handleTabChange('notifications', updated)}
           />
         </TabsContent>
 

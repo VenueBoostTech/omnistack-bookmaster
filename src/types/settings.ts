@@ -1,13 +1,5 @@
 // types/settings.ts
 export interface Settings {
-  general: {
-    name: string;
-    code: string;
-    taxId: string | null;
-    address: string | null;
-    phone: string | null;
-    email: string | null;
-  };
   finance: {
     fiscalYearStart: Date | null;
     defaultCurrency: string;
