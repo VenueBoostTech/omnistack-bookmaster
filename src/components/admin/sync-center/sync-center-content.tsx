@@ -14,9 +14,7 @@ import {
  FileSpreadsheet,
  Upload,
  Download,
- History,
- CheckCircle,
- XCircle
+ ArrowLeft
 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BrandSyncSettingsModal } from './modals/brand-sync-settings-modal'
@@ -25,6 +23,7 @@ import { ImportProgressModal } from './modals/import-progress-modal'
 import { ScanDetailsModal } from './modals/scan-details-modal'
 import { BrandSyncModal } from './modals/brand-sync-modal'
 import { ActivityDetailsModal } from './modals/activity-details-modal'
+import { useRouter } from "next/navigation";
 
 interface SyncMethod {
  id: string;
@@ -153,6 +152,7 @@ export function SyncCenterContent() {
  const [selectedTemplate, setSelectedTemplate] = useState('simple');
  const [activeModal, setActiveModal] = useState<string | null>(null);
  const [selectedBrand, setSelectedBrand] = useState<string>('');
+ const router = useRouter();
 
 const [modalState, setModalState] = useState({
   quickImport: false,
@@ -206,12 +206,21 @@ const MethodActions = ({ method }: { method: SyncMethod }) => {
 
  return (
    <div className="space-y-6">
-     <div>
-       <h1 className="text-2xl font-bold tracking-tight">Sync & Import Center</h1>
-       <p className="text-sm text-muted-foreground mt-2">
-         Manage all your data synchronization and import operations
-       </p>
-     </div>
+      <div className="flex justify-between items-start">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">Sync Center</h1>
+      <p className="text-sm text-muted-foreground mt-2">
+        Manage your product synchronization and integrations
+      </p>
+    </div>
+    <Button 
+      variant="outline" 
+      onClick={() => router.push('/admin/products')}
+    >
+      <ArrowLeft className="h-4 w-4 mr-2" />
+      Back to Products
+    </Button>
+    </div>
 
      <Tabs defaultValue="overview" className="space-y-4">
        <TabsList>

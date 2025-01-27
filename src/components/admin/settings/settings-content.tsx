@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { GeneralTab } from "./GeneralTab";
 import { FinanceTab } from "./FinanceTab";
@@ -13,13 +13,15 @@ import { LocalizationTab } from "./LocalizationTab";
 import { IntegrationsTab } from "./IntegrationsTab";
 import { AutomationTab } from "./AutomationTab";
 import { Settings } from "@/types/settings";
+import { useRouter } from "next/navigation";
 
 export function SettingsContent() {
+  const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
-    setLocalSettings(settings); // Sync with the context when settings change
+    setLocalSettings(settings);
   }, [settings]);
 
   const handleTabChange = (section: keyof Settings, updatedSection: any) => {
@@ -37,7 +39,6 @@ export function SettingsContent() {
         throw new Error("No settings available to save");
       }
   
-      // Use `Object.keys` with type assertion
       for (const section of Object.keys(localSettings) as (keyof Settings)[]) {
         const sectionData = localSettings[section];
         if (sectionData) {
@@ -52,17 +53,28 @@ export function SettingsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+
+      <div className="flex justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Manage your company settings and preferences
+            Manage your company settings and preferences. For personal information updates, visit the profile page.
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button 
+          variant="outline" 
+          onClick={() => router.push('/admin/profile')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Profile
+        </Button>
         <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
           <SaveIcon className="h-4 w-4 mr-2" />
           Save Changes
         </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="general">
@@ -76,52 +88,51 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-        <GeneralTab
+          <GeneralTab
             initialSettings={localSettings?.general || { companyName: '', taxId: '', address: '', phone: '' }}
             onChange={(updatedGeneral) => handleTabChange("general", updatedGeneral)}
           />
         </TabsContent>
         <TabsContent value="finance" className="space-y-6 mt-6">
-            <FinanceTab
-              initialSettings={localSettings?.finance || {
-                fiscalYearStart: "01",
-                taxRate: 20,
-                autoPostTransactions: true,
-                trackCostCenters: false,
-                documentSettings: {
-                  invoicePrefix: "INV-",
-                  nextInvoiceNumber: 1001,
-                },
-              }}
-              onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
-            />
-          </TabsContent>
+          <FinanceTab
+            initialSettings={localSettings?.finance || {
+              fiscalYearStart: "01",
+              taxRate: 20,
+              autoPostTransactions: true,
+              trackCostCenters: false,
+              documentSettings: {
+                invoicePrefix: "INV-",
+                nextInvoiceNumber: 1001,
+              },
+            }}
+            onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
+          />
+        </TabsContent>
 
+        <TabsContent value="notifications" className="space-y-6 mt-6">
+          <NotificationsTab
+            initialSettings={localSettings?.notifications || {
+              emailNotifications: true,
+              lowStockAlerts: true,
+              transactionAlerts: true,
+            }}
+            onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
+          />
+        </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6 mt-6">
-            <NotificationsTab
-              initialSettings={localSettings?.notifications || {
-                emailNotifications: true,
-                lowStockAlerts: true,
-                transactionAlerts: true,
-              }}
-              onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
-            />
-          </TabsContent>
+        <TabsContent value="localizations" className="space-y-6 mt-6">
+          <LocalizationTab
+            initialSettings={localSettings?.localization || {
+              language: "en",
+              currency: "ALL",
+              dateFormat: "dd/mm/yyyy",
+              timezone: "europe-tirana",
+            }}
+            onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
+          />
+        </TabsContent>
 
-          <TabsContent value="localizations" className="space-y-6 mt-6">
-            <LocalizationTab
-              initialSettings={localSettings?.localization || {
-                language: "en",
-                currency: "ALL",
-                dateFormat: "dd/mm/yyyy",
-                timezone: "europe-tirana",
-              }}
-              onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
-            />
-          </TabsContent>
-
-          <TabsContent value="integrations" className="space-y-6 mt-6">
+        <TabsContent value="integrations" className="space-y-6 mt-6">
           <IntegrationsTab
             initialSettings={localSettings?.integrations || {
               venueBoost: { enabled: false },
@@ -131,7 +142,6 @@ export function SettingsContent() {
             onChange={(updatedIntegrations) => handleTabChange("integrations", updatedIntegrations)}
           />
         </TabsContent>
-
 
         <TabsContent value="automation" className="space-y-6 mt-6">
           <AutomationTab
@@ -158,7 +168,6 @@ export function SettingsContent() {
             onChange={(updatedAutomation) => handleTabChange("automation", updatedAutomation)}
           />
         </TabsContent>
-
       </Tabs>
     </div>
   );
