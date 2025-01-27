@@ -19,36 +19,24 @@ export function SettingsContent() {
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
-    setLocalSettings(settings); // Sync with the context when settings change
-  }, [settings]);
-
-  const handleTabChange = (section: keyof Settings, updatedSection: any) => {
-    if (localSettings) {
-      setLocalSettings({
-        ...localSettings,
-        [section]: updatedSection,
-      });
+    if (settings) {
+      setLocalSettings(settings);
     }
-  };
+  }, [settings]);
 
   const handleSave = async () => {
     try {
       if (!localSettings) {
         throw new Error("No settings available to save");
       }
-  
-      // Use `Object.keys` with type assertion
-      for (const section of Object.keys(localSettings) as (keyof Settings)[]) {
-        const sectionData = localSettings[section];
-        if (sectionData) {
-          await updateSettings(section, sectionData);
-        }
-      }
+      await updateSettings(localSettings);
       toast.success("Settings saved successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save settings");
     }
   };
+
+  if (!localSettings) return null;
 
   return (
     <div className="space-y-6">
@@ -76,89 +64,46 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-        <GeneralTab
-            initialSettings={localSettings?.general || { companyName: '', taxId: '', address: '', phone: '' }}
-            onChange={(updatedGeneral) => handleTabChange("general", updatedGeneral)}
+          <GeneralTab
+            settings={localSettings?.general}
+            onChange={(updated) => setLocalSettings({ ...localSettings, general: updated })}
           />
         </TabsContent>
+
         <TabsContent value="finance" className="space-y-6 mt-6">
-            <FinanceTab
-              initialSettings={localSettings?.finance || {
-                fiscalYearStart: "01",
-                taxRate: 20,
-                autoPostTransactions: true,
-                trackCostCenters: false,
-                documentSettings: {
-                  invoicePrefix: "INV-",
-                  nextInvoiceNumber: 1001,
-                },
-              }}
-              onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
-            />
-          </TabsContent>
-
-
-          <TabsContent value="notifications" className="space-y-6 mt-6">
-            <NotificationsTab
-              initialSettings={localSettings?.notifications || {
-                emailNotifications: true,
-                lowStockAlerts: true,
-                transactionAlerts: true,
-              }}
-              onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
-            />
-          </TabsContent>
-
-          <TabsContent value="localizations" className="space-y-6 mt-6">
-            <LocalizationTab
-              initialSettings={localSettings?.localization || {
-                language: "en",
-                currency: "ALL",
-                dateFormat: "dd/mm/yyyy",
-                timezone: "europe-tirana",
-              }}
-              onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
-            />
-          </TabsContent>
-
-          <TabsContent value="integrations" className="space-y-6 mt-6">
-          <IntegrationsTab
-            initialSettings={localSettings?.integrations || {
-              venueBoost: { enabled: false },
-              bankIntegration: { enabled: false },
-              webhooks: { endpoints: [] },
-            }}
-            onChange={(updatedIntegrations) => handleTabChange("integrations", updatedIntegrations)}
+          <FinanceTab
+            settings={localSettings?.finance}
+            onChange={(updated) => setLocalSettings({ ...localSettings, finance: updated })}
           />
         </TabsContent>
 
+        <TabsContent value="notifications" className="space-y-6 mt-6">
+          <NotificationsTab
+            settings={localSettings?.notifications}
+            onChange={(updated) => setLocalSettings({ ...localSettings, notifications: updated })}
+          />
+        </TabsContent>
+
+        <TabsContent value="localizations" className="space-y-6 mt-6">
+          <LocalizationTab
+            settings={localSettings?.localization}
+            onChange={(updated) => setLocalSettings({ ...localSettings, localization: updated })}
+          />
+        </TabsContent>
+
+        <TabsContent value="integrations" className="space-y-6 mt-6">
+          <IntegrationsTab
+            settings={localSettings?.integrations}
+            onChange={(updated) => setLocalSettings({ ...localSettings, integrations: updated })}
+          />
+        </TabsContent>
 
         <TabsContent value="automation" className="space-y-6 mt-6">
           <AutomationTab
-            initialSettings={localSettings?.automation || {
-              autoStockReorder: {
-                enabled: false,
-                threshold: 10,
-                suppliers: [],
-              },
-              dailyBackup: {
-                enabled: true,
-                time: "00:00",
-                retentionDays: 30,
-              },
-              reportGeneration: {
-                enabled: false,
-                schedule: {
-                  frequency: "daily",
-                  time: "06:00",
-                },
-                reports: [],
-              },
-            }}
-            onChange={(updatedAutomation) => handleTabChange("automation", updatedAutomation)}
+            settings={localSettings?.automation}
+            onChange={(updated) => setLocalSettings({ ...localSettings, automation: updated })}
           />
         </TabsContent>
-
       </Tabs>
     </div>
   );

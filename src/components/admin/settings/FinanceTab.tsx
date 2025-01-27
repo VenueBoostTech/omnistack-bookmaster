@@ -5,134 +5,108 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import InputSelect from "@/components/Common/InputSelect";
-import { FinanceSettings } from "@/types/settings";
+import { Settings } from "@/types/settings";
 
 const FISCAL_YEAR_OPTIONS = [
-  { value: "01", label: "January" },
-  { value: "02", label: "February" },
-  { value: "03", label: "March" },
-  { value: "04", label: "April" },
-  { value: "05", label: "May" },
-  { value: "06", label: "June" },
-  { value: "07", label: "July" },
-  { value: "08", label: "August" },
-  { value: "09", label: "September" },
-  { value: "10", label: "October" },
-  { value: "11", label: "November" },
-  { value: "12", label: "December" },
+ { value: "01", label: "January" },
+ { value: "02", label: "February" },
+ { value: "03", label: "March" },
+ { value: "04", label: "April" },
+ { value: "05", label: "May" },
+ { value: "06", label: "June" },
+ { value: "07", label: "July" },
+ { value: "08", label: "August" },
+ { value: "09", label: "September" },
+ { value: "10", label: "October" },
+ { value: "11", label: "November" },
+ { value: "12", label: "December" },
 ];
 
 interface FinanceTabProps {
-  initialSettings: FinanceSettings;
-  onChange: (updatedSettings: FinanceSettings) => void;
+ settings: Settings['finance'];
+ onChange: (updatedSettings: Settings['finance']) => void;
 }
 
-export function FinanceTab({ initialSettings, onChange }: FinanceTabProps) {
-  const [localSettings, setLocalSettings] = useState(initialSettings);
+export function FinanceTab({ settings, onChange }: FinanceTabProps) {
+ const [localSettings, setLocalSettings] = useState(settings);
 
-  useEffect(() => {
-    setLocalSettings(initialSettings);
-  }, [initialSettings]);
+ useEffect(() => {
+   setLocalSettings(settings);
+ }, [settings]);
 
-  const handleChange = (field: keyof FinanceSettings) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedSettings = {
-      ...localSettings,
-      [field]: e.target.type === "number" ? Number(e.target.value) : e.target.value,
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings);
-  };
+ const handleChange = (field: keyof Settings['finance'], value: any) => {
+   const updatedSettings = {
+     ...localSettings,
+     [field]: value
+   };
+   setLocalSettings(updatedSettings);
+   onChange(updatedSettings);
+ };
 
-  const handleDocumentSettingChange = (field: keyof FinanceSettings["documentSettings"]) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const updatedSettings = {
-      ...localSettings,
-      documentSettings: {
-        ...localSettings.documentSettings,
-        [field]: e.target.type === "number" ? Number(e.target.value) : e.target.value,
-      },
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings);
-  };
+ return (
+   <div className="space-y-6">
+     <Card>
+       <CardHeader>
+         <CardTitle>Accounting Preferences</CardTitle>
+       </CardHeader>
+       <CardContent className="space-y-4">
+         <div className="grid grid-cols-2 gap-4">
+           <InputSelect
+             name="fiscalYearStart"
+             label="Fiscal Year Start"
+             options={FISCAL_YEAR_OPTIONS}
+             value={localSettings?.fiscalYearStart?.getMonth()?.toString().padStart(2, '0') || '01'}
+             onChange={(e) => {
+               const date = new Date();
+               date.setMonth(parseInt(e.target.value) - 1);
+               handleChange("fiscalYearStart", date);
+             }}
+           />
+           <div className="space-y-2">
+             <label className="text-sm font-medium">Default Currency</label>
+             <InputSelect
+               name="defaultCurrency"
+               label=""
+               value={localSettings?.defaultCurrency}
+               onChange={(e) => handleChange("defaultCurrency", e.target.value)}
+               options={[
+                 { value: "ALL", label: "Albanian Lek (ALL)" },
+                 { value: "EUR", label: "Euro (EUR)" },
+                 { value: "USD", label: "US Dollar (USD)" }
+               ]}
+             />
+           </div>
+         </div>
 
-  const toggleSetting = (setting: keyof FinanceSettings) => {
-    const updatedSettings = {
-      ...localSettings,
-      [setting]: !localSettings[setting],
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Accounting Preferences</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <InputSelect
-              name="fiscalYear"
-              label="Fiscal Year Start"
-              options={FISCAL_YEAR_OPTIONS}
-              value={localSettings.fiscalYearStart}
-              onChange={(e) => handleChange("fiscalYearStart")(e as React.ChangeEvent<HTMLInputElement>)}
-            />
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tax Rate (%)</label>
-              <Input type="number" value={localSettings.taxRate} onChange={handleChange("taxRate")} />
-            </div>
-          </div>
-
-          <div className="space-y-4 mt-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium">Auto-post Transactions</div>
-                <div className="text-sm text-muted-foreground">Automatically post verified transactions</div>
-              </div>
-              <Switch
-                checked={localSettings.autoPostTransactions}
-                onCheckedChange={() => toggleSetting("autoPostTransactions")}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium">Track Cost Centers</div>
-                <div className="text-sm text-muted-foreground">Enable cost center tracking</div>
-              </div>
-              <Switch checked={localSettings.trackCostCenters} onCheckedChange={() => toggleSetting("trackCostCenters")} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Document Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Invoice Prefix</label>
-              <Input
-                value={localSettings.documentSettings.invoicePrefix}
-                onChange={handleDocumentSettingChange("invoicePrefix")}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Next Invoice Number</label>
-              <Input
-                type="number"
-                value={localSettings.documentSettings.nextInvoiceNumber}
-                onChange={handleDocumentSettingChange("nextInvoiceNumber")}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+         <div className="space-y-4 mt-4">
+           <div className="space-y-2">
+             <label className="text-sm font-medium">Document Prefix</label>
+             <Input
+               value={localSettings?.documentSettings?.prefix || ''}
+               onChange={(e) => 
+                 handleChange("documentSettings", {
+                   ...localSettings?.documentSettings,
+                   prefix: e.target.value
+                 })
+               }
+             />
+           </div>
+           <div className="space-y-2">
+             <label className="text-sm font-medium">Next Document Number</label>
+             <Input
+               type="number"
+               value={localSettings?.documentSettings?.nextNumber || 1000}
+               onChange={(e) => 
+                 handleChange("documentSettings", {
+                   ...localSettings?.documentSettings,
+                   nextNumber: parseInt(e.target.value)
+                 })
+               }
+             />
+           </div>
+         </div>
+       </CardContent>
+     </Card>
+   </div>
+ );
 }

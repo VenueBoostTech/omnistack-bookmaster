@@ -1,86 +1,43 @@
 // types/settings.ts
-export interface GeneralSettings {
-    companyName: string;
-    taxId: string;
-    address: string;
-    phone: string;
-  }
-
-  export interface LocalizationSettings {
-    language: string;
-    currency: string;
-    dateFormat: string;
-    timezone: string;
-   }
-   
-   export interface NotificationSettings {
-    emailNotifications: boolean;
-    lowStockAlerts: boolean;
-    transactionAlerts: boolean;
-   }
-
-   export interface FinanceSettings {
-    fiscalYearStart: string;
+export interface Settings {
+  general: {
+    name: string;
+    code: string;
+    taxId: string | null;
+    address: string | null;
+    phone: string | null;
+    email: string | null;
+  };
+  finance: {
+    fiscalYearStart: Date | null;
+    defaultCurrency: string;
     taxRate: number;
-    autoPostTransactions: boolean;
-    trackCostCenters: boolean;
     documentSettings: {
-      invoicePrefix: string;
-      nextInvoiceNumber: number;
-    }
-   }
-
-   export interface IntegrationSettings {
+      prefix: string;
+      nextNumber: number;
+    };
+  };
+  localization: {
+    language: string;
+    timezone: string;
+    dateFormat: string;
+    currency: string;
+  };
+  notifications: {
+    email: boolean;
+    lowStock: boolean;
+    transactions: boolean;
+  };
+  integrations: {
     venueBoost: {
-      apiKey?: string;
       enabled: boolean;
-      lastSync?: Date;
+      apiKey?: string;
       webhookUrl?: string;
     };
-    bankIntegration: {
-      bankId?: string;
-      accountId?: string;
+    bank: {
       enabled: boolean;
-      lastSync?: Date;
+      provider?: string;
+      credentials?: Record<string, any>;
     };
-    webhooks: {
-      endpoints: {
-        url: string;
-        secret: string;
-        events: string[];
-        enabled: boolean;
-      }[];
-    };
-   }
-
-   export interface AutomationSettings {
-    autoStockReorder: {
-      enabled: boolean;
-      threshold: number;
-      suppliers: string[];
-    };
-    dailyBackup: {
-      enabled: boolean;
-      time: string;
-      retentionDays: number;
-    };
-    reportGeneration: {
-      enabled: boolean;
-      schedule: {
-        frequency: 'daily' | 'weekly' | 'monthly';
-        day?: number;
-        time: string;
-      };
-      reports: string[];
-    };
-   }
-      
-   export interface Settings {
-    general: GeneralSettings;
-    localization: LocalizationSettings;
-    notifications: NotificationSettings;
-    finance: FinanceSettings;
-    integrations: IntegrationSettings;
-    automation: AutomationSettings;
-  }
-  
+  };
+}
