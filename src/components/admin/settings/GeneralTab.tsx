@@ -3,28 +3,53 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Settings } from "@/types/settings";
+import { useClient } from "@/hooks/useClient";
 
-interface GeneralTabProps {
-  settings: Settings['general'];
-  onChange: (updatedSettings: Settings['general']) => void;
-}
-
-export function GeneralTab({ settings, onChange }: GeneralTabProps) {
-  const [localSettings, setLocalSettings] = useState(settings);
+export function GeneralTab() {
+  const { clientId } = useClient();
+  const [clientData, setClientData] = useState(null);
 
   useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
-
-  const handleChange = (field: keyof Settings['general']) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedSettings = {
-      ...localSettings,
-      [field]: e.target.value,
+    const fetchClient = async () => {
+      try {
+        const res = await fetch(`/api/client?clientId=${clientId}`);
+        const data = await res.json();
+        setClientData(data.client);
+      } catch (error) {
+        console.error('Failed to fetch client:', error);
+      }
     };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings);
+
+    if (clientId) {
+      fetchClient();
+    }
+  }, [clientId]);
+
+  const handleChange = (field) => (e) => {
+    setClientData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
   };
+
+  const handleBlur = async () => {
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: clientData,
+          clientId
+        })
+      });
+      
+      if (!res.ok) throw new Error('Failed to update client');
+    } catch (error) {
+      console.error('Failed to update client:', error);
+    }
+  };
+
+  if (!clientData) return null;
 
   return (
     <div className="space-y-6">
@@ -37,32 +62,36 @@ export function GeneralTab({ settings, onChange }: GeneralTabProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">Company Name</label>
               <Input
-                value={localSettings?.name || ''}
+                value={clientData.name || ''}
                 onChange={handleChange("name")}
+                onBlur={handleBlur}
                 placeholder="Enter company name"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Code</label>
               <Input
-                value={localSettings?.code || ''}
+                value={clientData.code || ''}
                 onChange={handleChange("code")}
+                onBlur={handleBlur}
                 placeholder="Enter company code"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Tax ID</label>
               <Input
-                value={localSettings?.taxId || ''}
+                value={clientData.taxId || ''}
                 onChange={handleChange("taxId")}
+                onBlur={handleBlur}
                 placeholder="Enter tax ID"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
               <Input
-                value={localSettings?.email || ''}
+                value={clientData.email || ''}
                 onChange={handleChange("email")}
+                onBlur={handleBlur}
                 placeholder="Enter email"
                 type="email"
               />
@@ -70,16 +99,18 @@ export function GeneralTab({ settings, onChange }: GeneralTabProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">Address</label>
               <Input
-                value={localSettings?.address || ''}
+                value={clientData.address || ''}
                 onChange={handleChange("address")}
+                onBlur={handleBlur}
                 placeholder="Enter address"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Phone</label>
               <Input
-                value={localSettings?.phone || ''}
+                value={clientData.phone || ''}
                 onChange={handleChange("phone")}
+                onBlur={handleBlur}
                 placeholder="Enter phone"
               />
             </div>

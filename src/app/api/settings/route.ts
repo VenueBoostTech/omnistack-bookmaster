@@ -16,8 +16,49 @@ export async function GET(request: Request) {
       select: { settings: true }
     });
 
-    return NextResponse.json(client?.settings || {});
+    // Initialize default settings if none exist
+    const settings = client?.settings || {
+      general: {
+        name: '',
+        code: '',
+        taxId: null,
+        address: null,
+        phone: null,
+        email: null
+      },
+      finance: {
+        fiscalYearStart: null,
+        defaultCurrency: 'USD',
+        taxRate: 0,
+        documentSettings: {
+          prefix: '',
+          nextNumber: 1
+        }
+      },
+      localization: {
+        language: 'en',
+        timezone: 'UTC',
+        dateFormat: 'DD/MM/YYYY',
+        currency: 'USD'
+      },
+      notifications: {
+        email: false,
+        lowStock: false,
+        transactions: false
+      },
+      integrations: {
+        venueBoost: {
+          enabled: false
+        },
+        bank: {
+          enabled: false
+        }
+      }
+    };
+
+    return NextResponse.json(settings);
   } catch (error) {
+    console.error('Failed to fetch settings:', error);
     return NextResponse.json(
       { error: 'Failed to fetch settings' },
       { status: 500 }
@@ -29,13 +70,24 @@ export async function PUT(request: Request) {
   try {
     const { clientId, settings } = await request.json();
 
+    if (!clientId) {
+      return NextResponse.json(
+        { error: 'Client ID is required' },
+        { status: 400 }
+      );
+    }
+
     const updatedClient = await prisma.client.update({
       where: { id: clientId },
-      data: { settings }
+      data: { 
+        settings: settings
+      },
+      select: { settings: true }
     });
 
     return NextResponse.json(updatedClient.settings);
   } catch (error) {
+    console.error('Failed to update settings:', error);
     return NextResponse.json(
       { error: 'Failed to update settings' },
       { status: 500 }

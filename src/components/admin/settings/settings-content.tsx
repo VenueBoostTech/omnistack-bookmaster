@@ -77,10 +77,7 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-          <GeneralTab
-            settings={localSettings?.general}
-            onChange={(updated) => setLocalSettings({ ...localSettings, general: updated })}
-          />
+          <GeneralTab />
         </TabsContent>
 
         <TabsContent value="finance" className="space-y-6 mt-6">
