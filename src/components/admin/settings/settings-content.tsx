@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { SaveIcon } from "lucide-react";
+import { SaveIcon, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { GeneralTab } from "./GeneralTab";
 import { FinanceTab } from "./FinanceTab";
@@ -13,8 +13,10 @@ import { LocalizationTab } from "./LocalizationTab";
 import { IntegrationsTab } from "./IntegrationsTab";
 import { AutomationTab } from "./AutomationTab";
 import { Settings } from "@/types/settings";
+import { useRouter } from "next/navigation";
 
 export function SettingsContent() {
+  const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
 
@@ -40,17 +42,28 @@ export function SettingsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+
+      <div className="flex justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Manage your company settings and preferences
+            Manage your company settings and preferences. For personal information updates, visit the profile page.
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button 
+          variant="outline" 
+          onClick={() => router.push('/admin/profile')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Profile
+        </Button>
         <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
           <SaveIcon className="h-4 w-4 mr-2" />
           Save Changes
         </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="general">

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -22,17 +22,18 @@ import {
   AlertTriangle,
   Trash2,
   Copy,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  // DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import { useRouter } from "next/navigation";
 const PRODUCT_METRICS = [
   {
     title: "Total Products",
@@ -136,6 +137,7 @@ export function ProductsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const totalItems = 100;
   const totalPages = Math.ceil(totalItems / pageSize);
+  const router = useRouter();
 
   return (
     <div className="space-y-6">
@@ -156,6 +158,10 @@ export function ProductsContent() {
             <Plus className="h-4 w-4 mr-2" />
             Add Product
           </Button>
+          <Button variant="secondary" onClick={() => router.push('/admin/sync-center')}>
+            <RefreshCw className="h-4 w-4 mr-2" /> 
+          Sync Center
+         </Button>
         </div>
       </div>
 
