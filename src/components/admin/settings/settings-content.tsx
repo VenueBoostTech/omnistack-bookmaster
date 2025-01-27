@@ -14,46 +14,98 @@ import { IntegrationsTab } from "./IntegrationsTab";
 import { AutomationTab } from "./AutomationTab";
 import { Settings } from "@/types/settings";
 import { useRouter } from "next/navigation";
+import { useClient } from '@/hooks/useClient';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SettingsContent() {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, isLoading } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
+  const [clientData, setClientData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { clientId } = useClient();
 
   useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
-
-  const handleTabChange = (section: keyof Settings, updatedSection: any) => {
-    if (localSettings) {
-      setLocalSettings({
-        ...localSettings,
-        [section]: updatedSection,
-      });
+    if (settings) {
+      setLocalSettings(settings);
     }
-  };
+  }, [settings]);
 
   const handleSave = async () => {
     try {
-      if (!localSettings) {
-        throw new Error("No settings available to save");
+      setIsSaving(true);
+      // Save client data first
+      if (clientData) {
+        const clientRes = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId,
+            data: clientData
+          })
+        });
+        
+        if (!clientRes.ok) throw new Error('Failed to update client');
       }
-  
-      for (const section of Object.keys(localSettings) as (keyof Settings)[]) {
-        const sectionData = localSettings[section];
-        if (sectionData) {
-          await updateSettings(section, sectionData);
-        }
+
+      // Then save settings
+      if (localSettings) {
+        await updateSettings(localSettings);
       }
-      toast.success("Settings saved successfully");
+      
+      toast.success("All settings saved successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save settings");
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const handleTabChange = (section: keyof Settings, newData: any) => {
+    if (!localSettings) return;
+    
+    const updatedSettings = {
+      ...localSettings,
+      [section]: newData
+    };
+    
+    requestAnimationFrame(() => {
+      setLocalSettings(updatedSettings);
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-96 mt-2" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!localSettings) return null;
+
   return (
     <div className="space-y-6">
-
       <div className="flex justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
@@ -63,17 +115,22 @@ export function SettingsContent() {
         </div>
         <div className="flex gap-2">
           <Button 
-          variant="outline" 
-          onClick={() => router.push('/admin/profile')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
-        <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
-          <SaveIcon className="h-4 w-4 mr-2" />
-          Save Changes
-        </Button>
+            variant="outline" 
+            onClick={() => router.push('/admin/profile')}
+            className="mb-4"
+            disabled={isSaving}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            style={{ backgroundColor: "#5FC4D0" }}
+            disabled={isSaving}
+          >
+            <SaveIcon className="h-4 w-4 mr-2" />
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
       </div>
 
@@ -88,84 +145,41 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-          <GeneralTab
-            initialSettings={localSettings?.general || { companyName: '', taxId: '', address: '', phone: '' }}
-            onChange={(updatedGeneral) => handleTabChange("general", updatedGeneral)}
-          />
+          <GeneralTab onDataChange={setClientData} />
         </TabsContent>
+
         <TabsContent value="finance" className="space-y-6 mt-6">
           <FinanceTab
-            initialSettings={localSettings?.finance || {
-              fiscalYearStart: "01",
-              taxRate: 20,
-              autoPostTransactions: true,
-              trackCostCenters: false,
-              documentSettings: {
-                invoicePrefix: "INV-",
-                nextInvoiceNumber: 1001,
-              },
-            }}
-            onChange={(updatedFinance) => handleTabChange("finance", updatedFinance)}
+            settings={localSettings?.finance}
+            onChange={(updated) => handleTabChange('finance', updated)}
           />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6 mt-6">
           <NotificationsTab
-            initialSettings={localSettings?.notifications || {
-              emailNotifications: true,
-              lowStockAlerts: true,
-              transactionAlerts: true,
-            }}
-            onChange={(updatedNotifications) => handleTabChange("notifications", updatedNotifications)}
+            settings={localSettings?.notifications}
+            onChange={(updated) => handleTabChange('notifications', updated)}
           />
         </TabsContent>
 
         <TabsContent value="localizations" className="space-y-6 mt-6">
           <LocalizationTab
-            initialSettings={localSettings?.localization || {
-              language: "en",
-              currency: "ALL",
-              dateFormat: "dd/mm/yyyy",
-              timezone: "europe-tirana",
-            }}
-            onChange={(updatedLocalization) => handleTabChange("localization", updatedLocalization)}
+            settings={localSettings?.localization}
+            onChange={(updated) => handleTabChange('localization', updated)}
           />
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6 mt-6">
           <IntegrationsTab
-            initialSettings={localSettings?.integrations || {
-              venueBoost: { enabled: false },
-              bankIntegration: { enabled: false },
-              webhooks: { endpoints: [] },
-            }}
-            onChange={(updatedIntegrations) => handleTabChange("integrations", updatedIntegrations)}
+            settings={localSettings?.integrations}
+            onChange={(updated) => handleTabChange('integrations', updated)}
           />
         </TabsContent>
 
         <TabsContent value="automation" className="space-y-6 mt-6">
           <AutomationTab
-            initialSettings={localSettings?.automation || {
-              autoStockReorder: {
-                enabled: false,
-                threshold: 10,
-                suppliers: [],
-              },
-              dailyBackup: {
-                enabled: true,
-                time: "00:00",
-                retentionDays: 30,
-              },
-              reportGeneration: {
-                enabled: false,
-                schedule: {
-                  frequency: "daily",
-                  time: "06:00",
-                },
-                reports: [],
-              },
-            }}
-            onChange={(updatedAutomation) => handleTabChange("automation", updatedAutomation)}
+            settings={localSettings?.automation}
+            onChange={(updated) => handleTabChange('automation', updated)}
           />
         </TabsContent>
       </Tabs>

@@ -3,26 +3,41 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { NotificationSettings } from "@/types/settings";
+import { Settings } from "@/types/settings";
 
 interface NotificationsTabProps {
-  initialSettings: NotificationSettings;
-  onChange: (updatedSettings: NotificationSettings) => void;
+  settings: Settings['notifications'];
+  onChange: (updatedSettings: Settings['notifications']) => void;
 }
 
-export function NotificationsTab({ initialSettings, onChange }: NotificationsTabProps) {
-  const [localSettings, setLocalSettings] = useState<NotificationSettings>(initialSettings);
+const defaultSettings: Settings['notifications'] = {
+  email: false,
+  lowStock: false,
+  transactions: false
+};
+
+export function NotificationsTab({ settings, onChange }: NotificationsTabProps) {
+  const [localSettings, setLocalSettings] = useState<Settings['notifications']>(settings || defaultSettings);
 
   useEffect(() => {
-    setLocalSettings(initialSettings); // Sync local state with parent settings
-  }, [initialSettings]);
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
-  const toggleSetting = (setting: keyof NotificationSettings) => {
-    setLocalSettings((prev) => {
-      const updatedSettings = { ...prev, [setting]: !prev[setting] };
-      onChange(updatedSettings); // Notify parent about the changes
-      return updatedSettings;
-    });
+  useEffect(() => {
+    // Only call onChange if localSettings is different from settings
+    if (JSON.stringify(localSettings) !== JSON.stringify(settings)) {
+      onChange(localSettings);
+    }
+  }, [localSettings, settings, onChange]);
+
+  const toggleSetting = (setting: keyof Settings['notifications']) => {
+    setLocalSettings((prev) => ({
+      ...defaultSettings,
+      ...prev,
+      [setting]: !(prev?.[setting] ?? false)
+    }));
   };
 
   return (
@@ -38,8 +53,8 @@ export function NotificationsTab({ initialSettings, onChange }: NotificationsTab
               <div className="text-sm text-muted-foreground">Receive daily summaries and alerts</div>
             </div>
             <Switch
-              checked={localSettings.emailNotifications}
-              onCheckedChange={() => toggleSetting("emailNotifications")}
+              checked={localSettings.email ?? false}
+              onCheckedChange={() => toggleSetting("email")}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -48,8 +63,8 @@ export function NotificationsTab({ initialSettings, onChange }: NotificationsTab
               <div className="text-sm text-muted-foreground">Get notified when inventory is low</div>
             </div>
             <Switch
-              checked={localSettings.lowStockAlerts}
-              onCheckedChange={() => toggleSetting("lowStockAlerts")}
+              checked={localSettings.lowStock ?? false}
+              onCheckedChange={() => toggleSetting("lowStock")}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -58,8 +73,8 @@ export function NotificationsTab({ initialSettings, onChange }: NotificationsTab
               <div className="text-sm text-muted-foreground">Notifications for important transactions</div>
             </div>
             <Switch
-              checked={localSettings.transactionAlerts}
-              onCheckedChange={() => toggleSetting("transactionAlerts")}
+              checked={localSettings.transactions ?? false}
+              onCheckedChange={() => toggleSetting("transactions")}
             />
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import InputSelect from "@/components/Common/InputSelect";
-import { LocalizationSettings } from "@/types/settings";
+import { Settings } from "@/types/settings";
 
 const OPTIONS = {
   language: [
@@ -26,25 +26,40 @@ const OPTIONS = {
   ],
 };
 
+const defaultSettings: Settings['localization'] = {
+  language: 'en',
+  currency: 'ALL',
+  dateFormat: 'dd/mm/yyyy',
+  timezone: 'europe-tirana'
+};
+
 interface LocalizationTabProps {
-  initialSettings: LocalizationSettings;
-  onChange: (updatedSettings: LocalizationSettings) => void;
+  settings: Settings['localization'];
+  onChange: (updatedSettings: Settings['localization']) => void;
 }
 
-export function LocalizationTab({ initialSettings, onChange }: LocalizationTabProps) {
-  const [localSettings, setLocalSettings] = useState<LocalizationSettings>(initialSettings);
+export function LocalizationTab({ settings, onChange }: LocalizationTabProps) {
+  const [localSettings, setLocalSettings] = useState<Settings['localization']>(settings || defaultSettings);
 
   useEffect(() => {
-    setLocalSettings(initialSettings); // Sync local state with parent settings
-  }, [initialSettings]);
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
-  const handleChange = (field: keyof LocalizationSettings) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const updatedSettings = {
-      ...localSettings,
+  useEffect(() => {
+    if (JSON.stringify(localSettings) !== JSON.stringify(settings)) {
+      requestAnimationFrame(() => {
+        onChange(localSettings);
+      });
+    }
+  }, [localSettings, settings, onChange]);
+
+  const handleChange = (field: keyof Settings['localization']) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLocalSettings(prev => ({
+      ...prev,
       [field]: e.target.value,
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings); // Notify parent about changes
+    }));
   };
 
   return (
