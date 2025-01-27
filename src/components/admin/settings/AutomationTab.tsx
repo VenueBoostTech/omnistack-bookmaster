@@ -1,3 +1,4 @@
+// AutomationTab.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,42 +6,60 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import InputSelect from "@/components/Common/InputSelect";
-import { AutomationSettings } from "@/types/settings";
+import { Settings } from "@/types/settings";
+
+const defaultSettings: Settings['automation'] = {
+  autoStockReorder: {
+    enabled: false,
+    threshold: 20
+  },
+  reportGeneration: {
+    enabled: false,
+    frequency: 'daily',
+    time: '09:00'
+  }
+};
 
 interface AutomationTabProps {
-  initialSettings: AutomationSettings;
-  onChange: (updatedSettings: AutomationSettings) => void;
+  settings: Settings['automation'];
+  onChange: (updatedSettings: Settings['automation']) => void;
 }
 
-export function AutomationTab({ initialSettings, onChange }: AutomationTabProps) {
-  const [localSettings, setLocalSettings] = useState<AutomationSettings>(initialSettings);
+export function AutomationTab({ settings, onChange }: AutomationTabProps) {
+  const [localSettings, setLocalSettings] = useState<Settings['automation']>(settings || defaultSettings);
 
   useEffect(() => {
-    setLocalSettings(initialSettings); // Sync with parent settings
-  }, [initialSettings]);
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
-  const handleSettingChange = (section: keyof AutomationSettings, key: string, value: any) => {
-    const updatedSettings = {
-      ...localSettings,
+  useEffect(() => {
+    if (JSON.stringify(localSettings) !== JSON.stringify(settings)) {
+      requestAnimationFrame(() => {
+        onChange(localSettings);
+      });
+    }
+  }, [localSettings, settings, onChange]);
+
+  const handleSettingChange = (section: 'autoStockReorder' | 'reportGeneration', value: any) => {
+    setLocalSettings(prev => ({
+      ...prev,
       [section]: {
-        ...localSettings[section],
-        [key]: value,
-      },
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings); // Notify parent of changes
+        ...prev[section],
+        ...value
+      }
+    }));
   };
 
-  const toggleSection = (section: keyof AutomationSettings) => {
-    const updatedSettings = {
-      ...localSettings,
+  const toggleSection = (section: 'autoStockReorder' | 'reportGeneration') => {
+    setLocalSettings(prev => ({
+      ...prev,
       [section]: {
-        ...localSettings[section],
-        enabled: !localSettings[section].enabled,
-      },
-    };
-    setLocalSettings(updatedSettings);
-    onChange(updatedSettings);
+        ...prev[section],
+        enabled: !prev[section].enabled
+      }
+    }));
   };
 
   return (
@@ -50,7 +69,6 @@ export function AutomationTab({ initialSettings, onChange }: AutomationTabProps)
           <CardTitle>Automated Tasks</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Auto Stock Reorder */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -72,11 +90,9 @@ export function AutomationTab({ initialSettings, onChange }: AutomationTabProps)
                     type="number"
                     value={localSettings.autoStockReorder.threshold}
                     onChange={(e) =>
-                      handleSettingChange(
-                        "autoStockReorder",
-                        "threshold",
-                        Number(e.target.value)
-                      )
+                      handleSettingChange("autoStockReorder", {
+                        threshold: Number(e.target.value)
+                      })
                     }
                   />
                 </div>
@@ -84,51 +100,6 @@ export function AutomationTab({ initialSettings, onChange }: AutomationTabProps)
             )}
           </div>
 
-          {/* Daily Backup */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium">Daily Backup</div>
-                <div className="text-sm text-muted-foreground">
-                  Automatic daily data backup
-                </div>
-              </div>
-              <Switch
-                checked={localSettings.dailyBackup.enabled}
-                onCheckedChange={() => toggleSection("dailyBackup")}
-              />
-            </div>
-            {localSettings.dailyBackup.enabled && (
-              <div className="pl-6 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Backup Time</label>
-                  <Input
-                    type="time"
-                    value={localSettings.dailyBackup.time}
-                    onChange={(e) =>
-                      handleSettingChange("dailyBackup", "time", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Retention Period (days)</label>
-                  <Input
-                    type="number"
-                    value={localSettings.dailyBackup.retentionDays}
-                    onChange={(e) =>
-                      handleSettingChange(
-                        "dailyBackup",
-                        "retentionDays",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Report Generation */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -147,16 +118,11 @@ export function AutomationTab({ initialSettings, onChange }: AutomationTabProps)
                 <InputSelect
                   name="frequency"
                   label="Frequency"
-                  value={localSettings.reportGeneration.schedule.frequency}
+                  value={localSettings.reportGeneration.frequency}
                   onChange={(e) =>
-                    handleSettingChange(
-                      "reportGeneration",
-                      "schedule",
-                      {
-                        ...localSettings.reportGeneration.schedule,
-                        frequency: e.target.value as "daily" | "weekly" | "monthly",
-                      }
-                    )
+                    handleSettingChange("reportGeneration", {
+                      frequency: e.target.value
+                    })
                   }
                   options={[
                     { value: "daily", label: "Daily" },
@@ -168,16 +134,11 @@ export function AutomationTab({ initialSettings, onChange }: AutomationTabProps)
                   <label className="text-sm font-medium">Time</label>
                   <Input
                     type="time"
-                    value={localSettings.reportGeneration.schedule.time}
+                    value={localSettings.reportGeneration.time}
                     onChange={(e) =>
-                      handleSettingChange(
-                        "reportGeneration",
-                        "schedule",
-                        {
-                          ...localSettings.reportGeneration.schedule,
-                          time: e.target.value,
-                        }
-                      )
+                      handleSettingChange("reportGeneration", {
+                        time: e.target.value
+                      })
                     }
                   />
                 </div>
