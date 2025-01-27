@@ -20,6 +20,15 @@ export interface Settings {
     lowStock: boolean;
     transactions: boolean;
   };
+  autoStockReorder: {
+    enabled: boolean;
+    threshold: number;
+  };
+  reportGeneration: {
+    enabled: boolean;
+    frequency: string;
+    time: string;
+  };
   integrations: {
     venueBoost: {
       enabled: boolean;

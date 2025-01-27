@@ -56,8 +56,6 @@ export function SettingsContent() {
     }
   };
 
-  if (!localSettings) return null;
-
   const handleTabChange = (section: keyof Settings, newData: any) => {
     if (!localSettings) return;
     
@@ -66,16 +64,15 @@ export function SettingsContent() {
       [section]: newData
     };
     
-    // Using requestAnimationFrame to avoid React state update warning
     requestAnimationFrame(() => {
       setLocalSettings(updatedSettings);
     });
   };
 
+  if (!localSettings) return null;
 
   return (
     <div className="space-y-6">
-
       <div className="flex justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
@@ -85,17 +82,17 @@ export function SettingsContent() {
         </div>
         <div className="flex gap-2">
           <Button 
-          variant="outline" 
-          onClick={() => router.push('/admin/profile')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
-        <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
-          <SaveIcon className="h-4 w-4 mr-2" />
-          Save Changes
-        </Button>
+            variant="outline" 
+            onClick={() => router.push('/admin/profile')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
+          <Button onClick={handleSave} style={{ backgroundColor: "#5FC4D0" }}>
+            <SaveIcon className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
         </div>
       </div>
 
@@ -121,7 +118,7 @@ export function SettingsContent() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6 mt-6">
-            <NotificationsTab
+          <NotificationsTab
             settings={localSettings?.notifications}
             onChange={(updated) => handleTabChange('notifications', updated)}
           />
@@ -137,14 +134,14 @@ export function SettingsContent() {
         <TabsContent value="integrations" className="space-y-6 mt-6">
           <IntegrationsTab
             settings={localSettings?.integrations}
-            onChange={(updated) => setLocalSettings({ ...localSettings, integrations: updated })}
+            onChange={(updated) => handleTabChange('integrations', updated)}
           />
         </TabsContent>
 
         <TabsContent value="automation" className="space-y-6 mt-6">
           <AutomationTab
             settings={localSettings?.automation}
-            onChange={(updated) => setLocalSettings({ ...localSettings, automation: updated })}
+            onChange={(updated) => handleTabChange('automation', updated)}
           />
         </TabsContent>
       </Tabs>
