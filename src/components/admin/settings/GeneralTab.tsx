@@ -34,7 +34,7 @@ export function GeneralTab() {
 
   const handleBlur = async () => {
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/api/client', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -43,7 +43,7 @@ export function GeneralTab() {
         })
       });
       
-      if (!res.ok) throw new Error('Failed to update client');
+      if (!res.ok) throw new Error('Failed to update client1');
     } catch (error) {
       console.error('Failed to update client:', error);
     }

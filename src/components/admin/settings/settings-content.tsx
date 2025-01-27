@@ -14,11 +14,14 @@ import { IntegrationsTab } from "./IntegrationsTab";
 import { AutomationTab } from "./AutomationTab";
 import { Settings } from "@/types/settings";
 import { useRouter } from "next/navigation";
+import { useClient } from '@/hooks/useClient';
 
 export function SettingsContent() {
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
+  const [clientData, setClientData] = useState(null);
+  const { clientId } = useClient();
 
   useEffect(() => {
     if (settings) {
@@ -28,10 +31,25 @@ export function SettingsContent() {
 
   const handleSave = async () => {
     try {
-      if (!localSettings) {
-        throw new Error("No settings available to save");
+      // Save client data
+      if (clientData) {
+        const clientRes = await fetch('/api/client', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId,
+            data: clientData
+          })
+        });
+        
+        if (!clientRes.ok) throw new Error('Failed to update client');
       }
-      await updateSettings(localSettings);
+
+      // Save other settings
+      if (localSettings) {
+        await updateSettings(localSettings);
+      }
+      
       toast.success("Settings saved successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save settings");
@@ -77,7 +95,7 @@ export function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-          <GeneralTab />
+          <GeneralTab onDataChange={setClientData} />
         </TabsContent>
 
         <TabsContent value="finance" className="space-y-6 mt-6">
