@@ -1,5 +1,5 @@
 // types/profile.ts
-interface CompanyProfile {
+export interface CompanyProfile {
     name: string;
     code: string;
     taxId: string;
@@ -9,8 +9,5 @@ interface CompanyProfile {
     defaultCurrency: string;
    }
    
-   interface UserProfile {
-    name: string;
-    email: string;
-   }
+
    
