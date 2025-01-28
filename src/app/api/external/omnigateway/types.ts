@@ -16,10 +16,28 @@ export interface CreateAdjustmentPayload {
 }
 
 // brands
+export interface Brand {
+    id: string;
+    name: string;
+    description?: string;
+    code: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    apiConfig?: {
+        apiKey?: string;
+        apiSecret?: string;
+        endpoint?: string;
+    };
+    totalProducts: number;
+    lastSync?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface BrandParams {
     page?: number;
     limit?: number;
     search?: string;
+    status?: string;
 }
 
 export interface CreateBrandPayload {

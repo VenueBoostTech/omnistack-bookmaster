@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { batchApi } from '../app/api/external/omnigateway/batch';
-import {  BatchParams, Batch, CreateBatchPayload, UpdateBatchPayload, BatchResponse } from '../app/api/external/omnigateway/types/batch';
+import {  BatchParams, Batch, CreateBatchPayload, UpdateBatchPayload, BatchResponse, BatchMetrics } from '../app/api/external/omnigateway/types/batch';
 import { useToast } from '@/components/ui/use-toast';
 
 export const useBatches = () => {
@@ -8,6 +8,8 @@ export const useBatches = () => {
     const [batches, setBatches] = useState<Batch[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [metrics, setMetrics] = useState<BatchMetrics | null>(null);
+
     const { toast } = useToast();
 
     const fetchBatches = useCallback(async (params: BatchParams = {}) => {
@@ -146,11 +148,31 @@ export const useBatches = () => {
         }
     }, [toast]);
 
+    const fetchMetrics = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const response = await batchApi.getBatchMetrics();
+            setMetrics(response);
+            return response;
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to fetch batch metrics",
+                variant: "destructive",
+            });
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
+
     return {
         isLoading,
         batches,
         totalItems,
         totalPages,
+        metrics,
+        fetchMetrics,
         fetchBatches,
         createBatch,
         updateBatch,
