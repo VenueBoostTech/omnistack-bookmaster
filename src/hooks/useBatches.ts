@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { batchApi } from '../app/api/external/omnigateway/batch';
-import {  BatchParams, Batch, CreateBatchPayload, UpdateBatchPayload, BatchResponse } from '../app/api/external/omnigateway/types';
+import {  BatchParams, Batch, CreateBatchPayload, UpdateBatchPayload, BatchResponse } from '../app/api/external/omnigateway/types/batch';
 import { useToast } from '@/components/ui/use-toast';
 
 export const useBatches = () => {
