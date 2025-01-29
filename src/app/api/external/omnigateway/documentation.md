@@ -111,8 +111,8 @@ model Client {
      };
    };
 
-   // hooks/useClientApiKey.ts
-   export const useClientApiKey = () => {
+   // hooks/useGatewayClientApiKey.ts
+   export const useGatewayClientApiKey = () => {
      const { clientId } = useClient();
      // Fetch and return omniGatewayApiKey
    };
@@ -122,7 +122,7 @@ model Client {
    ```typescript
    // Components using Gateway APIs
    export function SomeComponent() {
-     const apiKey = useClientApiKey();
+     const apiKey = useGatewayClientApiKey();
      const { data } = useGatewayData(apiKey);
      // ... component logic
    }
