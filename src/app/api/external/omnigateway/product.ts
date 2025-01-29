@@ -1,35 +1,24 @@
-import { omniGateway } from './index';
-import { ProductParams, UpdateProductPayload } from './types';
-import { CreateProductPayload } from './types';
+// api/inventory-adjustment.ts
+import { createOmniGateway } from './index';
+import type { AdjustmentParams, CreateAdjustmentPayload } from './types';
 
-export const productApi = {
-  getProducts: async (params: ProductParams = {}) => {
-    const { data } = await omniGateway.get('/products', { params });
-    return data;
-  },
+export const createInventoryAdjustmentApi = (clientApiKey: string) => {
+    const omniGateway = createOmniGateway(clientApiKey);
 
-  createProduct: async (product: CreateProductPayload) => {
-    const { data } = await omniGateway.post('/products', product);
-    return data;
-  },
-
-  getProductById: async (id: string) => {
-    const { data } = await omniGateway.get(`/products/${id}`);
-    return data;
-  },
-
-  updateProduct: async (id: string, product: UpdateProductPayload) => {
-    const { data } = await omniGateway.put(`/products/${id}`, product);
-    return data;
-  },
-
-  deleteProduct: async (id: string) => {
-    const { data } = await omniGateway.delete(`/products/${id}`);
-    return data;
-  },
-
-  hardDeleteProduct: async (id: string) => {
-    const { data } = await omniGateway.delete(`/products/${id}/hard`);
-    return data;
-  }
+    return {
+        getAdjustments: async (params: AdjustmentParams) => {
+            const { data } = await omniGateway.get('/inventory/adjustments', { params });
+            return data;
+        },
+        
+        createAdjustment: async (adjustment: CreateAdjustmentPayload) => {
+            const { data } = await omniGateway.post('/inventory/adjustments', adjustment);
+            return data;
+        },
+        
+        getAdjustmentById: async (id: string) => {
+            const { data } = await omniGateway.get(`/inventory/adjustments/${id}`);
+            return data;
+        }
+    };
 };
