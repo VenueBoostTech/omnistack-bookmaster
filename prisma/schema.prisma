@@ -17,6 +17,7 @@ model Client {
   phone           String?
   email           String?
   omniGatewayId   String?         @unique
+  omniGatewayApiKey String?       @unique
   fiscalYearStart DateTime?
   defaultCurrency String          @default("USD")
   status          ClientStatus    @default(ACTIVE)
