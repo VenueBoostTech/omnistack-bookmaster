@@ -5,15 +5,24 @@ export function cn(...inputs: (string | undefined)[]) {
     return twMerge(clsx(inputs))
 }
 
+export function formatCurrency(amount: number, currency = "EUR") {
+    return new Intl.NumberFormat('en-EU', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
+
 export async function generateVendorCode() {
     while (true) {
       const code = 'V' + Math.random().toString(36).substring(2, 8).toUpperCase();
       const exists = await prisma.vendor.findFirst({ where: { code } });
       if (!exists) return code;
     }
-  }
+}
 
-  export async function generateTransactionNumber() {
+export async function generateTransactionNumber() {
     const today = new Date();
     const year = today.getFullYear().toString().slice(-2);
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
@@ -25,4 +34,4 @@ export async function generateVendorCode() {
       const exists = await prisma.transaction.findFirst({ where: { number } });
       if (!exists) return number;
     }
-   }
+}

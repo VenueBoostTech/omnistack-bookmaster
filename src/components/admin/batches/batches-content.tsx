@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -33,84 +33,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-
-const BATCH_METRICS = [
-  {
-    title: "Active Batches",
-    value: "156",
-    change: "+12",
-    trend: "up",
-    period: "vs last month",
-    icon: Boxes
-  },
-  {
-    title: "Near Expiry",
-    value: "8",
-    change: "-3",
-    trend: "down",
-    period: "vs last month",
-    icon: AlertCircle
-  },
-  {
-    title: "Processing",
-    value: "24",
-    change: "+5",
-    trend: "up",
-    period: "vs last month",
-    icon: Clock
-  },
-  {
-    title: "Stock Value",
-    value: "€85.2k",
-    change: "+15.2%",
-    trend: "up",
-    period: "vs last month",
-    icon: Package
-  }
-];
-
-const BATCHES = [
-  {
-    id: "BCH-2024-001",
-    product: "Office Chair - Premium",
-    sku: "FURN-001",
-    batchNumber: "B24001",
-    quantity: 50,
-    remainingQty: 35,
-    warehouse: "Main Warehouse",
-    status: "ACTIVE",
-    expiryDate: "2025-01-20",
-    received: "2024-01-15",
-    supplier: "Office Solutions Ltd"
-  },
-  {
-    id: "BCH-2024-002",
-    product: "LED Desk Lamp",
-    sku: "LIGHT-002",
-    batchNumber: "B24002",
-    quantity: 100,
-    remainingQty: 12,
-    warehouse: "South Branch",
-    status: "LOW",
-    expiryDate: "2024-12-15",
-    received: "2024-01-10",
-    supplier: "LightTech Inc"
-  },
-  {
-    id: "BCH-2024-003",
-    product: "Filing Cabinet",
-    sku: "FURN-003",
-    batchNumber: "B24003",
-    quantity: 30,
-    remainingQty: 30,
-    warehouse: "East Storage",
-    status: "PROCESSING",
-    expiryDate: "2025-06-30",
-    received: "2024-01-20",
-    supplier: "Storage Solutions Co"
-  }
-];
+import { useBatches } from '@/hooks/useBatches';
+import { formatCurrency } from '@/lib/utils';
+import {  BatchStatus } from '../../../app/api/external/omnigateway/types/batch';
 
 
 const getStatusBadge = (status: string) => {
@@ -131,13 +56,115 @@ const getExpiryStatus = (date: string) => {
 };
 
 export function BatchesContent() {
-  // Add state management
+  const apiKey = useClientApiKey();
+  const {
+    isLoading,
+    batches,
+    totalItems,
+    totalPages,
+    metrics,
+    fetchBatches,
+    fetchMetrics,
+    deactivateBatch
+  } = useBatches(apiKey);
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const totalItems = 100; // Replace with actual total
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const [warehouseId, setWarehouseId] = useState("all");
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
+
+  useEffect(() => {
+    fetchBatches({
+      page,
+      pageSize,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
+      search: searchTerm,
+      warehouseId: warehouseId !== 'all' ? warehouseId : undefined
+    });
+  }, [fetchBatches, page, pageSize, selectedStatus, searchTerm, warehouseId]);
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading...</div>;
+  }
+
+  if (batches.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-4xl mb-4">📦</div>
+        <h3 className="text-lg font-medium">No batches found</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Start by creating your first batch
+        </p>
+        <Button 
+          className="mt-4"
+          style={{ backgroundColor: "#5FC4D0" }}
+          onClick={() => {/* TODO: Add new batch modal */}}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Batch
+        </Button>
+      </div>
+    );
+  }
+
+  const metricsData = [
+    {
+      title: "Active Batches",
+      value: metrics?.activeBatches.count.toString() || "0",
+      change: metrics?.activeBatches.change.toString() || "0",
+      trend: (metrics?.activeBatches.change || 0) >= 0 ? "up" : "down",
+      period: "vs last month",
+      icon: Boxes
+    },
+    {
+      title: "Near Expiry",
+      value: metrics?.nearExpiry.count.toString() || "0",
+      change: metrics?.nearExpiry.change.toString() || "0",
+      trend: (metrics?.nearExpiry.change || 0) >= 0 ? "up" : "down",
+      period: "vs last month",
+      icon: AlertCircle
+    },
+    {
+      title: "Processing",
+      value: metrics?.processing.count.toString() || "0",
+      change: metrics?.processing.change.toString() || "0",
+      trend: (metrics?.processing.change || 0) >= 0 ? "up" : "down",
+      period: "vs last month",
+      icon: Clock
+    },
+    {
+      title: "Stock Value",
+      value: formatCurrency(metrics?.stockValue.value || 0),
+      change: `${metrics?.stockValue.change.toFixed(1)}%` || "0%",
+      trend: (metrics?.stockValue.change || 0) >= 0 ? "up" : "down",
+      period: "vs last month",
+      icon: Package
+    }
+  ];
+
+  const handleMarkAsExpired = async (id: string) => {
+    await deactivateBatch(id);
+    fetchBatches({
+      page,
+      pageSize,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
+      search: searchTerm,
+      warehouseId: warehouseId !== 'all' ? warehouseId : undefined
+    });
+  };
+
+  const statusCounts = {
+    all: totalItems || 0,
+    active: batches.filter(b => b.status === BatchStatus.ACTIVE).length,
+    low: batches.filter(b => b.status === BatchStatus.LOW).length,
+    processing: batches.filter(b => b.status === BatchStatus.PROCESSING).length,
+    expired: batches.filter(b => b.status === BatchStatus.EXPIRED).length
+  };
 
   return (
     <div className="space-y-6">
@@ -163,7 +190,7 @@ export function BatchesContent() {
 
       {/* Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {BATCH_METRICS.map((metric) => (
+        {metricsData.map((metric) => (
           <Card key={metric.title}>
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
@@ -194,7 +221,7 @@ export function BatchesContent() {
         ))}
       </div>
 
-      {/* Updated Filters Card */}
+      {/* Filters */}
       <Card>
         <CardHeader>
           <div className='mb-2'>
@@ -205,14 +232,13 @@ export function BatchesContent() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Status Filter Buttons */}
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 'all', label: 'All Batches', count: 156 },
-              { value: 'active', label: 'Active', count: 120 },
-              { value: 'low', label: 'Low Stock', count: 15 },
-              { value: 'processing', label: 'Processing', count: 12 },
-              { value: 'expired', label: 'Expired', count: 9 }
+              { value: 'all', label: 'All Batches', count: statusCounts.all },
+              { value: 'active', label: 'Active', count: statusCounts.active },
+              { value: 'low', label: 'Low Stock', count: statusCounts.low },
+              { value: 'processing', label: 'Processing', count: statusCounts.processing },
+              { value: 'expired', label: 'Expired', count: statusCounts.expired }
             ].map((status) => (
               <Button
                 key={status.value}
@@ -239,7 +265,6 @@ export function BatchesContent() {
             ))}
           </div>
 
-          {/* Search and Additional Filters */}
           <div className="flex gap-2 items-center">
             <div className="relative mt-2 flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -253,8 +278,8 @@ export function BatchesContent() {
             <InputSelect
               name="warehouse"
               label=""
-              value="all"
-              onChange={() => {}}
+              value={warehouseId}
+              onChange={(e) => setWarehouseId(e.target.value)}
               options={[
                 { value: "all", label: "All Warehouses" },
                 { value: "main", label: "Main Warehouse" },
@@ -272,7 +297,7 @@ export function BatchesContent() {
 
       {/* Batches List */}
       <div className="space-y-4">
-        {BATCHES.map((batch) => (
+        {batches.map((batch) => (
           <Card key={batch.id} className="hover:bg-accent/5 transition-colors">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-6">
@@ -317,7 +342,7 @@ export function BatchesContent() {
                             Adjust Quantity
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleMarkAsExpired(batch.id)}>
                             <XCircle className="h-4 w-4 mr-2" />
                             Mark as Expired
                           </DropdownMenuItem>
@@ -327,124 +352,124 @@ export function BatchesContent() {
                   </div>
                 </div>
 
-                {/* Center Column - Quantity */}
-                <div className="flex-1">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">Quantity</span>
-                        <span className="font-medium">{batch.remainingQty} / {batch.quantity} units</span>
-                      </div>
-                      <Progress 
-                        value={(batch.remainingQty / batch.quantity) * 100}
-                        className={`h-2 ${
-                          (batch.remainingQty / batch.quantity) <= 0.2 ? 'bg-red-500' :
-                          (batch.remainingQty / batch.quantity) <= 0.5 ? 'bg-yellow-500' :
-                          'bg-green-500'
-                        }`}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Received:</span>
-                        <span>{new Date(batch.received).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Expires:</span>
-                        <span className={getExpiryStatus(batch.expiryDate).color}>
-                          {new Date(batch.expiryDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+               {/* Center Column - Quantity */}
+<div className="flex-1">
+ <div className="space-y-4">
+   <div>
+     <div className="flex justify-between text-sm mb-2">
+       <span className="text-muted-foreground">Quantity</span>
+       <span className="font-medium">{batch.remainingQty} / {batch.quantity} units</span>
+     </div>
+     <Progress 
+       value={(batch.remainingQty / batch.quantity) * 100}
+       className={`h-2 ${
+         (batch.remainingQty / batch.quantity) <= 0.2 ? 'bg-red-500' :
+         (batch.remainingQty / batch.quantity) <= 0.5 ? 'bg-yellow-500' :
+         'bg-green-500'
+       }`}
+     />
+   </div>
+   <div className="flex items-center justify-between text-sm">
+     <div className="flex items-center gap-1">
+       <Clock className="h-4 w-4 text-muted-foreground" />
+       <span className="text-muted-foreground">Received:</span>
+       <span>{new Date(batch.received).toLocaleDateString()}</span>
+     </div>
+     <div className="flex items-center gap-1">
+       <Calendar className="h-4 w-4 text-muted-foreground" />
+       <span className="text-muted-foreground">Expires:</span>
+       <span className={getExpiryStatus(batch.expiryDate).color}>
+         {new Date(batch.expiryDate).toLocaleDateString()}
+       </span>
+     </div>
+   </div>
+ </div>
+</div>
 
-                {/* Right Column - Status */}
-                <div className="w-48">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Expiry Status</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {React.createElement(getExpiryStatus(batch.expiryDate).icon, {
-                          className: `h-5 w-5 ${getExpiryStatus(batch.expiryDate).color}`
-                        })}
-                        <span className={`font-medium ${getExpiryStatus(batch.expiryDate).color}`}>
-                          {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))} months left
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+{/* Right Column - Status */}
+<div className="w-48">
+ <div className="space-y-4">
+   <div>
+     <p className="text-sm text-muted-foreground">Expiry Status</p>
+     <div className="flex items-center gap-2 mt-1">
+       {React.createElement(getExpiryStatus(batch.expiryDate).icon, {
+         className: `h-5 w-5 ${getExpiryStatus(batch.expiryDate).color}`
+       })}
+       <span className={`font-medium ${getExpiryStatus(batch.expiryDate).color}`}>
+         {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))} months left
+       </span>
+     </div>
+   </div>
+ </div>
+</div>
+   </div>
+ </CardContent>
+</Card>
+))}
+</div>
 
-      {/* Updated Pagination */}
-      <div className="border-t px-4 py-4 flex items-center justify-between bg-white">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select
-              className="h-8 w-16 rounded-md border border-input bg-background"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {page} of {totalPages}
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(p => p - 1)}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-            .map((p, i, arr) => (
-              <React.Fragment key={p}>
-                {i > 0 && arr[i - 1] !== p - 1 && (
-                  <span className="px-2">...</span>
-                )}
-                <Button
-                  variant={page === p ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPage(p)}
-                  className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
-                >
-                  {p}
-                </Button>
-              </React.Fragment>
-            ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(p => p + 1)}
-            disabled={page === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-      
-      {/* Bottom spacing */}
-      <div className="h-8" />
-    </div>
-  );
+{/* Pagination */}
+<div className="border-t px-4 py-4 flex items-center justify-between bg-white">
+<div className="flex items-center space-x-6">
+ <div className="flex items-center space-x-2">
+   <p className="text-sm font-medium">Rows per page</p>
+   <select
+     className="h-8 w-16 rounded-md border border-input bg-background"
+     value={pageSize}
+     onChange={(e) => setPageSize(Number(e.target.value))}
+   >
+     {[5, 10, 20, 50].map((size) => (
+       <option key={size} value={size}>
+         {size}
+       </option>
+     ))}
+   </select>
+ </div>
+ <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+   Page {page} of {totalPages}
+ </div>
+</div>
+<div className="flex items-center space-x-2">
+ <Button
+   variant="outline"
+   size="sm"
+   onClick={() => setPage(p => p - 1)}
+   disabled={page === 1}
+ >
+   Previous
+ </Button>
+ {Array.from({ length: totalPages }, (_, i) => i + 1)
+   .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+   .map((p, i, arr) => (
+     <React.Fragment key={p}>
+       {i > 0 && arr[i - 1] !== p - 1 && (
+         <span className="px-2">...</span>
+       )}
+       <Button
+         variant={page === p ? "default" : "outline"}
+         size="sm"
+         onClick={() => setPage(p)}
+         className={page === p ? "bg-red-600 hover:bg-red-700" : ""}
+       >
+         {p}
+       </Button>
+     </React.Fragment>
+   ))}
+ <Button
+   variant="outline"
+   size="sm"
+   onClick={() => setPage(p => p + 1)}
+   disabled={page === totalPages}
+ >
+   Next
+ </Button>
+</div>
+</div>
+
+{/* Bottom spacing */}
+<div className="h-8" />
+</div>
+ );
 }
 
 export default BatchesContent;

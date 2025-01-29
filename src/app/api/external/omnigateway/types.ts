@@ -16,10 +16,28 @@ export interface CreateAdjustmentPayload {
 }
 
 // brands
+export interface Brand {
+    id: string;
+    name: string;
+    description?: string;
+    code: string;
+    status: 'ACTIVE' | 'INACTIVE';
+    apiConfig?: {
+        apiKey?: string;
+        apiSecret?: string;
+        endpoint?: string;
+    };
+    totalProducts: number;
+    lastSync?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface BrandParams {
     page?: number;
     limit?: number;
     search?: string;
+    status?: string;
 }
 
 export interface CreateBrandPayload {
@@ -128,64 +146,3 @@ export interface UpdateWarehousePayload {
   status?: 'active' | 'inactive';
 }
 
-
-export enum BatchStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  EXPIRED = 'expired',
-  PROCESSED = 'processed',
-  CANCELLED = 'cancelled'
-}
-
-export interface BatchParams {
-  page?: number;
-  limit?: number;
-  status?: BatchStatus;
-  warehouseId?: string;
-  productId?: string;
-  batchNumber?: string;
-}
-
-export interface CreateBatchPayload {
-  warehouseId: string;
-  productId: string;
-  batchNumber: string;
-  quantity: number;
-  status?: BatchStatus;
-  expiryDate?: Date;
-}
-
-export interface UpdateBatchPayload {
-  quantity?: number;
-  status?: BatchStatus;
-  expiryDate?: Date;
-}
-
-export interface Batch {
-  id: string;
-  clientId: string;
-  warehouseId: string;
-  productId: string;
-  batchNumber: string;
-  quantity: number;
-  status: BatchStatus;
-  expiryDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  product?: {
-      name: string;
-      code: string;
-  };
-  warehouse?: {
-      name: string;
-      code: string;
-  };
-}
-
-export interface BatchResponse {
-  items: Batch[];
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-}
