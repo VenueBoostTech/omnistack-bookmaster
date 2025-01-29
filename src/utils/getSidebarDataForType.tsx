@@ -16,7 +16,8 @@ import {
   ClipboardList,
   Wallet,
   Receipt,
-  PackageSearch
+  PackageSearch,
+  BadgeIcon
 } from 'lucide-react';
 
 export const getSidebarDataForType = (): {
@@ -59,6 +60,12 @@ export const getSidebarDataForType = (): {
           title: "Categories",
           path: "/admin/products/categories",
           icon: <Boxes className="w-4 h-4"/>
+        },
+        {
+          id: "3-3",
+          title: "Brands",
+          path: "/admin/brands",
+          icon: <BadgeIcon className="w-4 h-4"/>
         }
       ]
     },

@@ -56,6 +56,7 @@ const getExpiryStatus = (date: string) => {
 };
 
 export function BatchesContent() {
+  const apiKey = useClientApiKey();
   const {
     isLoading,
     batches,
@@ -65,7 +66,7 @@ export function BatchesContent() {
     fetchBatches,
     fetchMetrics,
     deactivateBatch
-  } = useBatches();
+  } = useBatches(apiKey);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);

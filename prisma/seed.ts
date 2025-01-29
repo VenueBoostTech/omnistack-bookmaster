@@ -112,7 +112,7 @@ main()
 // async function main() {
 //  await prisma.client.update({
 //    where: { id: '6795785555dcaaa39e3f5cb1' },
-//    data: { omniGatewayId: '67957d78172a3de27fd14a9a' }
+//    data: { omniGatewayId: '67957d78172a3de27fd14a9a', omniGatewayApiKey: '' }
 //  })
 // }
 
