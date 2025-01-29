@@ -1,19 +1,23 @@
-// api/import.ts
-import { omniGateway } from './index';
+// app/api/external/omnigateway/import.ts
+import { createOmniGateway } from './index';
 import { SimpleImportProductsPayload } from './types';
 
-export const importApi = {
- importProducts: async (payload: SimpleImportProductsPayload) => {
-   const formData = new FormData();
-   formData.append('file', payload.file);
-   formData.append('type', payload.type);
-   formData.append('brandId', payload.brandId);
+export const createImportApi = (clientApiKey: string) => {
+    const omniGateway = createOmniGateway(clientApiKey);
 
-   const { data } = await omniGateway.post('/import/products', formData, {
-     headers: {
-       'Content-Type': 'multipart/form-data',
-     },
-   });
-   return data;
- },
+    return {
+        importProducts: async (payload: SimpleImportProductsPayload) => {
+            const formData = new FormData();
+            formData.append('file', payload.file);
+            formData.append('type', payload.type);
+            formData.append('brandId', payload.brandId);
+
+            const { data } = await omniGateway.post('/import/products', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return data;
+        }
+    };
 };
