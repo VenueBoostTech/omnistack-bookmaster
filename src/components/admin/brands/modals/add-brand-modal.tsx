@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import { Textarea } from '@/components/ui/textarea'
 import { useBrands } from '@/hooks/useBrands'
+import toast from 'react-hot-toast'
 
 interface AddBrandModalProps {
   isOpen: boolean
@@ -35,29 +35,32 @@ const initialFormData = {
 export function AddBrandModal({ isOpen, onClose, onSuccess }: AddBrandModalProps) {
   const [formData, setFormData] = useState(initialFormData);
   const { createBrand, isLoading } = useBrands();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       await createBrand(formData);
-      setFormData(initialFormData); // Reset form
+      setFormData(initialFormData);
       onSuccess();
       onClose();
       
-      toast({
-        title: "Success",
-        description: "Brand created successfully",
+      toast.success('Brand created successfully', {
+        duration: 4000,
+        position: 'top-right',
       });
     } catch (error) {
       console.error('Error creating brand:', error);
-      // Error toast is already shown by the useBrands hook
+      
+      toast.error(error instanceof Error ? error.message : 'Failed to create brand', {
+        duration: 4000,
+        position: 'top-right',
+      });
     }
   };
 
   const handleClose = () => {
-    setFormData(initialFormData); // Reset form on close
+    setFormData(initialFormData);
     onClose();
   };
 
