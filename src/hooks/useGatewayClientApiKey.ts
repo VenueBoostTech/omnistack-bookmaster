@@ -1,27 +1,32 @@
 // hooks/useGatewayClientApiKey.ts
 import { useEffect, useState } from 'react';
 import { useClient } from './useClient';
-import { prisma } from '@/lib/prisma';
 
 export const useGatewayClientApiKey = () => {
     const { clientId } = useClient();
     const [apiKey, setApiKey] = useState<string | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        const getApiKey = async () => {
-            if (clientId) {
-                const client = await prisma.client.findUnique({
-                    where: { id: clientId },
-                    select: { omniGatewayApiKey: true }
-                });
-                if (client?.omniGatewayApiKey) {
-                    setApiKey(client.omniGatewayApiKey);
+        const fetchApiKey = async () => {
+            if (!clientId) return;
+
+            try {
+                const response = await fetch(`/api/client/gateway-api-key?clientId=${clientId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch API key');
                 }
+
+                const data = await response.json();
+                setApiKey(data.apiKey);
+            } catch (err) {
+                setError(err instanceof Error ? err : new Error('Unknown error'));
+                console.error('Error fetching gateway API key:', err);
             }
         };
 
-        getApiKey();
+        fetchApiKey();
     }, [clientId]);
 
-    return apiKey;
+    return { apiKey, error };
 };
