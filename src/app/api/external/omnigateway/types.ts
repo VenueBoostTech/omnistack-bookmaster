@@ -22,11 +22,7 @@ export interface Brand {
     description?: string;
     code: string;
     status: 'ACTIVE' | 'INACTIVE';
-    apiConfig?: {
-        apiKey?: string;
-        apiSecret?: string;
-        endpoint?: string;
-    };
+    apiConfig?: BrandApiConfig;
     totalProducts: number;
     lastSync?: string;
     createdAt: string;
@@ -50,10 +46,38 @@ export interface CreateBrandPayload {
     };
 }
 
+export interface BrandApiConfig {
+    apiKey: string;
+    apiSecret?: string;
+    endpoint: string; // This is the same as baseUrl in the UI
+    endpoints?: Record<string, string>;
+    headers?: Record<string, string>;
+    lastSyncStatus?: 'SUCCESS' | 'FAILED';
+    lastSyncAttempt?: Date;
+    isAutoSyncEnabled?: boolean;
+    refreshToken?: string;
+    tokenExpiresAt?: Date;
+}
+
 export interface UpdateBrandApiConfig {
     apiKey?: string;
     apiSecret?: string;
     endpoint?: string;
+    endpoints?: Record<string, string>;
+    headers?: Record<string, string>;
+    isAutoSyncEnabled?: boolean;
+    refreshToken?: string;
+}
+
+export interface SyncProductsResponse {
+    message: string;
+    status: 'PENDING' | 'STARTED';
+    timestamp: string;
+    jobId?: string;
+    brandId: string;
+    totalProducts?: number;
+    lastSyncStatus?: 'SUCCESS' | 'FAILED' | 'PENDING';
+    lastSyncAttempt?: string;
 }
 
 // products

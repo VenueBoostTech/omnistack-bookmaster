@@ -26,6 +26,8 @@ import { Brand } from '../../../app/api/external/omnigateway/types';
 import { useRouter } from 'next/navigation';
 import { AddBrandModal } from './modals/add-brand-modal';
 import { DeleteBrandModal } from './modals/delete-brand-modal';
+import { BrandApiConfig } from './modals/brand-api-modal';
+import SyncButton from './modals/sync-button';
 
 const BRAND_FILTERS = [
   { value: "ALL", label: "All Brands" },
@@ -50,6 +52,7 @@ const getApiStatusBadge = (hasConfig: boolean) => {
     : 'bg-red-100 text-red-800';
 };
 
+
 export function BrandsContent() {
   const router = useRouter();
   const {
@@ -68,6 +71,7 @@ export function BrandsContent() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [showApiConfig, setShowApiConfig] = useState(false);
 
   useEffect(() => {
     fetchBrands({
@@ -228,6 +232,7 @@ export function BrandsContent() {
             <TableHeader>
               <TableRow>
                 <TableHead>Brand</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Products</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>API Status</TableHead>
@@ -269,6 +274,9 @@ export function BrandsContent() {
                     </div>
                   </TableCell>
                   <TableCell>
+                  {brand.description ?? '-'}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Package className="h-4 w-4 text-muted-foreground" />
                       {brand.totalProducts || 0}
@@ -281,11 +289,22 @@ export function BrandsContent() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="secondary" 
-                        className={getApiStatusBadge(!!brand.apiConfig)}
-                      >
-                        {brand.apiConfig ? 'Connected' : 'Not Connected'}
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                          setSelectedBrand(brand);
+                          setShowApiConfig(true);
+                      }}
+                  >
+                      <Key className="h-4 w-4" />
+                  </Button>
+                    <SyncButton brand={brand} />
+                    <Badge 
+                      variant="secondary" 
+                      className={getApiStatusBadge(!!brand.apiConfig)}
+                    >
+                      {brand.apiConfig ? 'Connected' : 'Not Connected'}
                       </Badge>
                     </div>
                   </TableCell>
@@ -296,12 +315,6 @@ export function BrandsContent() {
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
                         <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Key className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <RefreshCcw className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -395,6 +408,24 @@ export function BrandsContent() {
        />
      )}
 
+{showApiConfig && selectedBrand && (
+    <BrandApiConfig
+        brand={selectedBrand}
+        isOpen={showApiConfig}
+        onClose={() => {
+            setShowApiConfig(false);
+            setSelectedBrand(null);
+        }}
+        onSuccess={() => {
+            fetchBrands({
+                page,
+                limit: pageSize,
+                status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
+                search: searchTerm
+            });
+        }}
+    />
+)}
      {showDeleteModal && (
        <DeleteBrandModal
          isOpen={showDeleteModal}
