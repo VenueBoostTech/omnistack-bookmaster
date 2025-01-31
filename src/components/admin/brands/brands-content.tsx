@@ -18,7 +18,6 @@ import {
   Settings,
   Trash2,
   Key,
-  RefreshCcw,
 } from "lucide-react";
 import { useBrands } from '@/hooks/useBrands';
 import { Brand } from '../../../app/api/external/omnigateway/types';
