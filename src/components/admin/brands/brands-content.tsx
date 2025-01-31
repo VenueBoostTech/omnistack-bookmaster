@@ -92,9 +92,9 @@ export function BrandsContent() {
 
   const metrics = {
     total: totalItems || 0,
-    active: brands.filter(b => b.status === 'ACTIVE').length,
-    connected: brands.filter(b => b.apiConfig).length,
-    totalProducts: brands.reduce((acc, brand) => acc + (brand.totalProducts || 0), 0)
+    active: brands?.filter(b => b.status === 'ACTIVE').length,
+    connected: brands?.filter(b => b.apiConfig).length,
+    totalProducts: brands?.reduce((acc, brand) => acc + (brand.totalProducts || 0), 0)
   };
 
   return (

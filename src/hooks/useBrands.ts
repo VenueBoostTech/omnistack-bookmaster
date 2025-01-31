@@ -1,8 +1,8 @@
-// hooks/useBrands.ts
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { createBrandApi } from '../app/api/external/omnigateway/brand';
 import { BrandParams, Brand, CreateBrandPayload, UpdateBrandApiConfig } from '../app/api/external/omnigateway/types';
 import { useGatewayClientApiKey } from '../hooks/useGatewayClientApiKey';
+import toast from 'react-hot-toast';
 
 export const useBrands = () => {
    const [isLoading, setIsLoading] = useState(false);
@@ -11,90 +11,114 @@ export const useBrands = () => {
    const [totalPages, setTotalPages] = useState(0);
    
    const { apiKey, error: apiKeyError } = useGatewayClientApiKey();
-   
-   const brandApi = useMemo(() => createBrandApi(apiKey || ''), [apiKey]);
+   const brandApi = useMemo(() => apiKey ? createBrandApi(apiKey) : null, [apiKey]);
+
+   // Initial fetch when API is ready
+   useEffect(() => {
+       if (brandApi) {
+           fetchBrands().catch(console.error);
+       }
+   }, [brandApi]);
 
    const fetchBrands = useCallback(async (params: BrandParams = {}) => {
-       if (!apiKey) {
-           throw new Error('API key not available');
-       }
+       // Silently return if API isn't ready yet
+       if (!brandApi) return;
+       
        try {
            setIsLoading(true);
            const response = await brandApi.getBrands(params);
-           setBrands(response.items);
+           setBrands(response.items || []);
            setTotalItems(response.total);
            setTotalPages(response.pages);
            return response;
        } catch (error) {
+           console.error('Error fetching brands:', error);
+           setBrands([]);
+           // Only show error toast for actual API errors, not initialization
+           if (brandApi) {
+               toast.error('Failed to fetch brands');
+           }
            throw error;
        } finally {
            setIsLoading(false);
        }
-   }, [apiKey, brandApi]);
+   }, [brandApi]);
 
    const createBrand = useCallback(async (data: CreateBrandPayload) => {
-       if (!apiKey) {
-           throw new Error('API key not available');
+       if (!brandApi) {
+           throw new Error('Service not ready');
        }
        try {
            setIsLoading(true);
            const response = await brandApi.createBrand(data);
+           toast.success('Brand created successfully');
+           await fetchBrands();
            return response;
        } catch (error) {
+           toast.error('Failed to create brand');
            throw error;
        } finally {
            setIsLoading(false);
        }
-   }, [apiKey, brandApi]);
+   }, [brandApi, fetchBrands]);
 
    const updateBrand = useCallback(async (id: string, data: Partial<Brand>) => {
-       if (!apiKey) {
-           throw new Error('API key not available');
+       if (!brandApi) {
+           throw new Error('Service not ready');
        }
        try {
            setIsLoading(true);
            const response = await brandApi.updateBrand(id, data);
+           toast.success('Brand updated successfully');
+           await fetchBrands();
            return response;
        } catch (error) {
+           toast.error('Failed to update brand');
            throw error;
        } finally {
            setIsLoading(false);
        }
-   }, [apiKey, brandApi]);
+   }, [brandApi, fetchBrands]);
 
    const updateBrandApiConfig = useCallback(async (id: string, config: UpdateBrandApiConfig) => {
-       if (!apiKey) {
-           throw new Error('API key not available');
+       if (!brandApi) {
+           throw new Error('Service not ready');
        }
        try {
            setIsLoading(true);
            const response = await brandApi.updateBrandApiConfig(id, config);
+           toast.success('API configuration updated successfully');
+           await fetchBrands();
            return response;
        } catch (error) {
+           toast.error('Failed to update API configuration');
            throw error;
        } finally {
            setIsLoading(false);
        }
-   }, [apiKey, brandApi]);
+   }, [brandApi, fetchBrands]);
 
    const deleteBrand = useCallback(async (id: string) => {
-       if (!apiKey) {
-           throw new Error('API key not available');
+       if (!brandApi) {
+           throw new Error('Service not ready');
        }
        try {
            setIsLoading(true);
            const response = await brandApi.deleteBrand(id);
+           toast.success('Brand deleted successfully');
+           await fetchBrands();
            return response;
        } catch (error) {
+           toast.error('Failed to delete brand');
            throw error;
        } finally {
            setIsLoading(false);
        }
-   }, [apiKey, brandApi]);
+   }, [brandApi, fetchBrands]);
 
    return {
        isLoading,
-       brands,
+       brands: brands || [],
        totalItems,
        totalPages,
        fetchBrands,
@@ -103,5 +127,6 @@ export const useBrands = () => {
        updateBrandApiConfig,
        deleteBrand,
        apiKeyError,
+       isInitialized: !!brandApi,
    };
 };

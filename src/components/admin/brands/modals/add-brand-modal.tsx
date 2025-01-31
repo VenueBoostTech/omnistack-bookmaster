@@ -40,7 +40,20 @@ export function AddBrandModal({ isOpen, onClose, onSuccess }: AddBrandModalProps
     e.preventDefault();
     
     try {
-      await createBrand(formData);
+      // Prepare data for submission
+      const submissionData = {
+        name: formData.name,
+        code: formData.code,
+        description: formData.description,
+      };
+
+      // Only include apiConfig if it has non-empty values
+      const hasApiConfig = formData.apiConfig.apiKey || formData.apiConfig.endpoint;
+      if (hasApiConfig) {
+        (submissionData as any).apiConfig = formData.apiConfig;
+      }
+
+      await createBrand(submissionData);
       setFormData(initialFormData);
       onSuccess();
       onClose();
