@@ -4,7 +4,8 @@ import {
     Brand, 
     BrandParams, 
     CreateBrandPayload, 
-    UpdateBrandApiConfig 
+    UpdateBrandApiConfig,
+    SyncProductsResponse 
 } from './types';
 
 export const createBrandApi = (clientApiKey: string) => {
@@ -33,6 +34,11 @@ export const createBrandApi = (clientApiKey: string) => {
 
         deleteBrand: async (id: string) => {
             const { data } = await omniGateway.delete(`/brands/${id}`);
+            return data;
+        },
+
+        syncProducts: async (id: string): Promise<SyncProductsResponse> => {
+            const { data } = await omniGateway.post(`/brands/${id}/sync`);
             return data;
         }
     };

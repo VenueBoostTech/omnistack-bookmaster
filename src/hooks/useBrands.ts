@@ -51,11 +51,9 @@ export const useBrands = () => {
        try {
            setIsLoading(true);
            const response = await brandApi.createBrand(data);
-           toast.success('Brand created successfully');
            await fetchBrands();
            return response;
        } catch (error) {
-           toast.error('Failed to create brand');
            throw error;
        } finally {
            setIsLoading(false);
@@ -87,11 +85,9 @@ export const useBrands = () => {
        try {
            setIsLoading(true);
            const response = await brandApi.updateBrandApiConfig(id, config);
-           toast.success('API configuration updated successfully');
            await fetchBrands();
            return response;
        } catch (error) {
-           toast.error('Failed to update API configuration');
            throw error;
        } finally {
            setIsLoading(false);
@@ -116,6 +112,24 @@ export const useBrands = () => {
        }
    }, [brandApi, fetchBrands]);
 
+    const syncBrandProducts = useCallback(async (brandId: string) => {
+        if (!brandApi) {
+            throw new Error('Service not ready');
+        }
+        try {
+            setIsLoading(true);
+            const response = await brandApi.syncProducts(brandId);
+            toast.success('Products sync started successfully');
+            return response;
+        } catch (error) {
+            toast.error('Error on syncing the products');
+            // Don't show error toast here since it's shown in the component
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [brandApi]);
+
    return {
        isLoading,
        brands: brands || [],
@@ -126,6 +140,7 @@ export const useBrands = () => {
        updateBrand,
        updateBrandApiConfig,
        deleteBrand,
+       syncBrandProducts,
        apiKeyError,
        isInitialized: !!brandApi,
    };
