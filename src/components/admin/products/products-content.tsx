@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import InputSelect from "@/components/Common/InputSelect";
 import {
   Package,
@@ -14,25 +13,12 @@ import {
   Plus,
   FileSpreadsheet,
   ShoppingCart,
-  MoreVertical,
   Boxes,
   ArrowUpRight,
   ArrowDownRight,
-  Edit3,
   AlertTriangle,
-  Trash2,
-  Copy,
-  ExternalLink,
   RefreshCw
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  // DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { ViewToggle } from './view-toggle';
 import { ProductsGrid } from './products-grid';
