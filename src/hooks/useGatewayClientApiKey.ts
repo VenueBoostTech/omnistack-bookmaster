@@ -8,10 +8,15 @@ export const useGatewayClientApiKey = () => {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+              
         const fetchApiKey = async () => {
-            if (!clientId) return;
+            if (!clientId) {
+                console.log('No clientId available');
+                return;
+            }
 
             try {
+                console.log('Fetching API key for clientId:', clientId);
                 const response = await fetch(`/api/client/gateway-api-key?clientId=${clientId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch API key');
@@ -21,7 +26,6 @@ export const useGatewayClientApiKey = () => {
                 setApiKey(data.apiKey);
             } catch (err) {
                 setError(err instanceof Error ? err : new Error('Unknown error'));
-                console.error('Error fetching gateway API key:', err);
             }
         };
 
