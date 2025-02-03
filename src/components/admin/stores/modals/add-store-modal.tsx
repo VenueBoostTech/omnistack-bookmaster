@@ -33,9 +33,6 @@ const initialFormData = {
   postcode: '',
   latitude: '',
   longitude: '',
-  externalIds: {
-    venueboostId: ''
-  }
 };
 
 export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps) {
@@ -52,17 +49,17 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
 
   // Transform location data for InputSelect
   const countryOptions = countries.map(country => ({
-    value: country.id,
+    value: country._id,
     label: country.name
   }));
 
   const stateOptions = states.map(state => ({
-    value: state.id,
+    value: state._id,
     label: state.name
   }));
 
   const cityOptions = cities.map(city => ({
-    value: city.id,
+    value: city._id,
     label: city.name
   }));
 
@@ -239,18 +236,6 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="venueboostId">Venueboost ID</Label>
-              <Input
-                id="venueboostId"
-                value={formData.externalIds.venueboostId}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  externalIds: { ...formData.externalIds, venueboostId: e.target.value }
-                })}
-                placeholder="Enter Venueboost ID (optional)"
-              />
-            </div>
           </div>
 
           <DialogFooter>
