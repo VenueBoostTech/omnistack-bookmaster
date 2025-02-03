@@ -9,7 +9,7 @@ This guide explains how to connect Bookmaster with Trackmaster using external ID
 1. **Update Database Schema**
 
    ```bash
-   npx prisma migrate dev --name add_trackmaster_external_id
+   npx prisma migrate dev --name add_trackmaster_id
    ```
 
 2. **Update Existing Client**
@@ -23,13 +23,13 @@ This guide explains how to connect Bookmaster with Trackmaster using external ID
 3. **Verify Connection**
    - Check that the client has both IDs:
      - omniGatewayId: '67957d78172a3de27fd14a9a'
-     - trackmaster_external_id: '234'
+     - trackMasterId: '234'
 
 ## Integration Points
 
 1. **Client Synchronization**
 
-   - Bookmaster clients are linked to Trackmaster via `trackmaster_external_id`
+   - Bookmaster clients are linked to Trackmaster via `trackMasterId`
    - When creating new clients, ensure both systems are updated
 
 2. **Data Flow**
@@ -49,7 +49,7 @@ This guide explains how to connect Bookmaster with Trackmaster using external ID
    const client = await prisma.client.findUnique({
      where: { id: "6795785555dcaaa39e3f5cb1" },
    });
-   console.log(client.trackmaster_external_id); // Should print "234"
+   console.log(client.trackMasterId); // Should print "234"
    ```
 
 2. **Test API Integration**
