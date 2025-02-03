@@ -31,8 +31,6 @@ const initialFormData = {
   addressLine1: '',
   addressLine2: '',
   postcode: '',
-  latitude: '',
-  longitude: '',
 };
 
 export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps) {
@@ -68,9 +66,7 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
     
     try {
       const storeData = {
-        ...formData,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined
+        ...formData
       };
 
       await createStore(storeData);
@@ -200,7 +196,7 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="postcode">Postal Code</Label>
                 <Input
@@ -208,30 +204,6 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
                   value={formData.postcode}
                   onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
                   placeholder="Enter postal code"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                  placeholder="Enter latitude"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                  placeholder="Enter longitude"
                 />
               </div>
             </div>
