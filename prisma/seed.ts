@@ -113,7 +113,7 @@ async function main() {
   await prisma.client.update({
     where: { id: '6795785555dcaaa39e3f5cb1' },
     data: { 
-      trackmaster_external_id: '67912730369ddcde8d740883'
+      trackMasterId: '67912730369ddcde8d740883'
     }
   })
 }
