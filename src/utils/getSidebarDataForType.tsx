@@ -86,7 +86,13 @@ export const getSidebarDataForType = (): {
           title: "Stock Levels",
           path: "/admin/warehouses/stock",
           icon: <FileSpreadsheet className="w-4 h-4"/>
-        }
+        },
+        {
+          id: "4-2",
+          title: "Stores",
+          path: "/admin/stores",
+          icon: <Store className="w-4 h-4"/>
+        },
       ]
     },
     {
