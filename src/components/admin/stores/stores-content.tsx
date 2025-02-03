@@ -65,7 +65,7 @@ export function StoresContent() {
 
   const handleDelete = async () => {
     if (!selectedStore) return;
-    await deleteStore(selectedStore.id);
+    await deleteStore(selectedStore._id);
     fetchStores({
       page,
       limit: pageSize,
@@ -196,7 +196,6 @@ export function StoresContent() {
               <TableRow>
                 <TableHead>Store</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead>External IDs</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -227,7 +226,7 @@ export function StoresContent() {
                   </TableCell>
                 </TableRow>
               ) : stores.map((store) => (
-                <TableRow key={store.id}>
+                <TableRow key={store._id}>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="font-medium">{store.name}</div>
@@ -244,13 +243,6 @@ export function StoresContent() {
                         </div>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {store.externalIds?.venueboostId ? (
-                      <Badge variant="secondary">
-                        VB: {store.externalIds.venueboostId}
-                      </Badge>
-                    ) : '-'}
                   </TableCell>
                   <TableCell>
                     <Badge 

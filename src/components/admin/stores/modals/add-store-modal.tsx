@@ -12,13 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import InputSelect from "@/components/Common/InputSelect"
 import { useStores } from '@/hooks/useStores'
 import toast from 'react-hot-toast'
 
@@ -39,9 +33,6 @@ const initialFormData = {
   postcode: '',
   latitude: '',
   longitude: '',
-  externalIds: {
-    venueboostId: ''
-  }
 };
 
 export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps) {
@@ -56,11 +47,26 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
     fetchCitiesForState
   } = useStores();
 
+  // Transform location data for InputSelect
+  const countryOptions = countries.map(country => ({
+    value: country._id,
+    label: country.name
+  }));
+
+  const stateOptions = states.map(state => ({
+    value: state._id,
+    label: state.name
+  }));
+
+  const cityOptions = cities.map(city => ({
+    value: city._id,
+    label: city.name
+  }));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      // Convert string coordinates to numbers if provided
       const storeData = {
         ...formData,
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
@@ -82,25 +88,30 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
     onClose();
   };
 
-  // Fetch states when country changes
-  const handleCountryChange = async (value: string) => {
+  // Handle location selection changes
+  const handleCountryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
     setFormData(prev => ({ 
       ...prev, 
       countryId: value,
       stateId: '',
       cityId: ''
     }));
-    await fetchStatesForCountry(value);
+    if (value && value !== 'Select Option') {
+      await fetchStatesForCountry(value);
+    }
   };
 
-  // Fetch cities when state changes
-  const handleStateChange = async (value: string) => {
+  const handleStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
     setFormData(prev => ({
       ...prev,
       stateId: value,
       cityId: ''
     }));
-    await fetchCitiesForState(value);
+    if (value && value !== 'Select Option') {
+      await fetchCitiesForState(value);
+    }
   };
 
   return (
@@ -139,66 +150,35 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label>Country</Label>
-                <Select 
-                  value={formData.countryId} 
-                  onValueChange={handleCountryChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.id} value={country.id}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <InputSelect
+                name="country"
+                label="Country"
+                options={countryOptions}
+                value={formData.countryId}
+                onChange={handleCountryChange}
+                required
+              />
 
-              <div className="grid gap-2">
-                <Label>State</Label>
-                <Select 
-                  value={formData.stateId} 
-                  onValueChange={handleStateChange}
-                  disabled={!formData.countryId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {states.map((state) => (
-                      <SelectItem key={state.id} value={state.id}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <InputSelect
+                name="state"
+                label="State"
+                options={stateOptions}
+                value={formData.stateId}
+                onChange={handleStateChange}
+                required
+              />
 
-              <div className="grid gap-2">
-                <Label>City</Label>
-                <Select 
-                  value={formData.cityId} 
-                  onValueChange={(value) => setFormData({ ...formData, cityId: value })}
-                  disabled={!formData.stateId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.id} value={city.id}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <InputSelect
+                name="city"
+                label="City"
+                options={cityOptions}
+                value={formData.cityId}
+                onChange={(e) => setFormData({ ...formData, cityId: e.target.value })}
+                required
+              />
             </div>
 
+            {/* Rest of the form fields remain the same */}
             <div className="grid gap-2">
               <Label htmlFor="addressLine1">Address Line 1</Label>
               <Input
@@ -256,18 +236,6 @@ export function AddStoreModal({ isOpen, onClose, onSuccess }: AddStoreModalProps
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="venueboostId">Venueboost ID</Label>
-              <Input
-                id="venueboostId"
-                value={formData.externalIds.venueboostId}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  externalIds: { ...formData.externalIds, venueboostId: e.target.value }
-                })}
-                placeholder="Enter Venueboost ID (optional)"
-              />
-            </div>
           </div>
 
           <DialogFooter>
