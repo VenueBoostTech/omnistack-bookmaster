@@ -110,11 +110,14 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function main() {
- await prisma.client.update({
-   where: { id: '6795785555dcaaa39e3f5cb1' },
-   data: { omniGatewayId: '67957d78172a3de27fd14a9a', omniGatewayApiKey: 'sk_8e10e36da8484d269094cb7d84dad8fada5a9c5577e68cc61116ec11a33d341e' }
- })
+  await prisma.client.update({
+    where: { id: '6795785555dcaaa39e3f5cb1' },
+    data: { 
+      trackmaster_external_id: '67912730369ddcde8d740883'
+    }
+  })
 }
+
 
 main()
  .catch(e => {
