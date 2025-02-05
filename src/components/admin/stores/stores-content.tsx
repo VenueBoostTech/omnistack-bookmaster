@@ -22,6 +22,8 @@ import { Store as StoreType } from '../../../app/api/external/omnigateway/types/
 import { useRouter } from 'next/navigation';
 import { AddStoreModal } from './modals/add-store-modal';
 import { DeleteStoreModal } from './modals/delete-store-modal';
+import { DeactivateStoreModal } from './modals/deactivate-store-modal';
+
 
 const STORE_FILTERS = [
   { value: "ALL", label: "All Stores" },
@@ -43,7 +45,9 @@ export function StoresContent() {
     totalItems,
     totalPages,
     fetchStores,
-    deleteStore
+    deleteStore,
+    deactivateStore
+  
   } = useStores();
 
   const [page, setPage] = useState(1);
@@ -53,6 +57,7 @@ export function StoresContent() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StoreType | null>(null);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   useEffect(() => {
     fetchStores({
@@ -81,6 +86,20 @@ export function StoresContent() {
     inactive: stores?.filter(s => !s.isActive).length || 0
   };
 
+
+  const handleDeactivate = async () => {
+    if (!selectedStore) return;
+    await deactivateStore(selectedStore._id);
+    fetchStores({
+      page,
+      limit: pageSize,
+      status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
+      search: searchTerm
+    });
+    setShowDeactivateModal(false);
+  };
+  
+  
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -234,16 +253,22 @@ export function StoresContent() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div>{store.address?.addressLine1}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {`${store.address?.city?.name}, ${store.address?.state?.name}, ${store.address?.country?.name}`}
-                        </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div>{store.address?.addressLine1 || 'No address'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {store.address ? (
+                          store.address.city?.name && store.address.state?.name && store.address.country?.name
+                            ? `${store.address.city.name}, ${store.address.state.name}, ${store.address.country.name}`
+                            : 'Address incomplete'
+                        ) : (
+                          'No location data'
+                        )}
                       </div>
                     </div>
-                  </TableCell>
+                  </div>
+                </TableCell>
                   <TableCell>
                     <Badge 
                       variant="secondary" 
@@ -253,22 +278,32 @@ export function StoresContent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedStore(store);
-                          setShowDeleteModal(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedStore(store);
+                            setShowDeactivateModal(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-orange-500" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedStore(store);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -357,6 +392,15 @@ export function StoresContent() {
           storeName={selectedStore.name}
         />
       )}
+
+        {showDeactivateModal && selectedStore && (
+          <DeactivateStoreModal
+            isOpen={showDeactivateModal}
+            onClose={() => setShowDeactivateModal(false)}
+            onConfirm={handleDeactivate}
+            storeName={selectedStore.name}
+          />
+        )}
     </div>
   );
 }

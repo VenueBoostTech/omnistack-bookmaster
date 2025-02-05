@@ -91,12 +91,30 @@ export const useStores = () => {
         }
         try {
             setIsLoading(true);
-            const response = await storeApi.deleteStore(id);
+            const response = await storeApi.hardDeleteStore(id);
             toast.success('Store deleted successfully');
             await fetchStores();
             return response;
         } catch (error) {
             toast.error('Failed to delete store');
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [storeApi, fetchStores]);
+
+    const deactivateStore = useCallback(async (id: string) => {
+        if (!storeApi) {
+            throw new Error('Service not ready');
+        }
+        try {
+            setIsLoading(true);
+            const response = await storeApi.deleteStore(id);
+            toast.success('Store deactivated successfully');
+            await fetchStores();
+            return response;
+        } catch (error) {
+            toast.error('Failed to deactivate store');
             throw error;
         } finally {
             setIsLoading(false);
@@ -151,6 +169,7 @@ export const useStores = () => {
         createStore,
         updateStore,
         deleteStore,
+        deactivateStore,
         fetchCountries,
         fetchStatesForCountry,
         fetchCitiesForState,
