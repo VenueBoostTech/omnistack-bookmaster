@@ -5,8 +5,8 @@ export const createVenueBoostApi = (clientApiKey: string) => {
     const omniGateway = createOmniGateway(clientApiKey);
     
     return {
-      connect: async (venueShortCode: string) => {
-        const { data } = await omniGateway.post('/vb/connect', { venueShortCode });
+      connect: async (venueShortCode: string, webhookApiKey: string) => {
+        const { data } = await omniGateway.post('/vb/connect', { venueShortCode, webhookApiKey });
         return data;
       },
   

@@ -32,8 +32,7 @@ export interface Settings {
   integrations: {
     venueBoost: {
       enabled: boolean;
-      apiKey?: string;
-      webhookUrl?: string;
+      webhookApiKey?: string;
       venueShortCode?: string; 
     };
     bank: {
