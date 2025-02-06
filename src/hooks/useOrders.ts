@@ -1,7 +1,7 @@
 // hooks/useOrders.ts
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { createOrderApi } from '../app/api/external/omnigateway/order';
-import { OrderParams, Order, UpdateOrderStatusPayload, AddOrderNotePayload } from '../app/api/external/omnigateway/types/orders';
+import { OrderParams, Order, UpdateOrderStatusPayload } from '../app/api/external/omnigateway/types/orders';
 import { useGatewayClientApiKey } from './useGatewayClientApiKey';
 import toast from 'react-hot-toast';
 
@@ -48,11 +48,11 @@ export const useOrders = () => {
         try {
             setIsLoading(true);
             const response = await orderApi.updateOrderStatus(id, payload);
-            toast.success('Order status updated successfully');
+            
             await fetchOrders();
             return response;
         } catch (error) {
-            toast.error('Failed to update order status');
+            
             throw error;
         } finally {
             setIsLoading(false);
@@ -65,10 +65,10 @@ export const useOrders = () => {
         try {
             setIsLoading(true);
             const response = await orderApi.addOrderNote(id, { note });
-            toast.success('Note added successfully');
+            
             return response;
         } catch (error) {
-            toast.error('Failed to add note');
+            
             throw error;
         } finally {
             setIsLoading(false);
