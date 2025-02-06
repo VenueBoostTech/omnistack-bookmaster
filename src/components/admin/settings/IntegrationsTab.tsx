@@ -8,12 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Settings } from "@/types/settings";
+import { useVenueBoost } from "@/hooks/useVenueBoost";
 
 const defaultSettings: Settings['integrations'] = {
   venueBoost: {
     enabled: false,
     apiKey: '',
-    webhookUrl: ''
+    webhookUrl: '',
+    venueShortCode: ''
   },
   bank: {
     enabled: false,
@@ -32,9 +34,11 @@ type ModalType = 'venueBoost' | 'bank' | null;
 export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
   const [localSettings, setLocalSettings] = useState<Settings['integrations']>(settings || defaultSettings);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const { connectVenueBoost } = useVenueBoost();
   const [modalData, setModalData] = useState({
     apiKey: '',
     webhookUrl: '',
+    venueShortCode: '',
     provider: '',
     credentials: {}
   });
@@ -53,9 +57,12 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
     }
   }, [localSettings, settings, onChange]);
 
-  const handleIntegrationChange = (integration: ModalType, data: any = {}) => {
+  const handleIntegrationChange = async (integration: ModalType, data: any = {}) => {
     if (!integration) return;
 
+    if (integration === 'venueBoost' && data.enabled && data.venueShortCode) {
+      await connectVenueBoost(data.venueShortCode);
+    }
     setLocalSettings(prev => ({
       ...prev,
       [integration]: {
@@ -72,6 +79,7 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
     setModalData({
       apiKey: localSettings[type].apiKey || '',
       webhookUrl: localSettings[type].webhookUrl || '',
+      venueShortCode: localSettings[type].venueShortCode || '',
       provider: type === 'bank' ? localSettings.bank.provider || '' : '',
       credentials: type === 'bank' ? localSettings.bank.credentials || {} : {}
     });
@@ -148,6 +156,14 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
                 placeholder="Enter webhook URL"
               />
             </div>
+            <div className="space-y-2">
+            <label className="text-sm font-medium">Venue Short Code</label>
+            <Input
+              value={modalData.venueShortCode}
+              onChange={(e) => setModalData({ ...modalData, venueShortCode: e.target.value })}
+              placeholder="Enter venue short code" 
+            />
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActiveModal(null)}>
@@ -157,7 +173,8 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
               onClick={() => handleIntegrationChange('venueBoost', {
                 enabled: true,
                 apiKey: modalData.apiKey,
-                webhookUrl: modalData.webhookUrl
+                webhookUrl: modalData.webhookUrl,
+                venueShortCode: modalData.venueShortCode
               })}
             >
               Save Changes

@@ -34,6 +34,7 @@ export interface Settings {
       enabled: boolean;
       apiKey?: string;
       webhookUrl?: string;
+      venueShortCode?: string; 
     };
     bank: {
       enabled: boolean;
