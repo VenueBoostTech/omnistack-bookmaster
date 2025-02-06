@@ -15,14 +15,17 @@ import {
   MapPin,
   Settings,
   Trash2,
-  Building2
+  Building2,
+  FolderSyncIcon
 } from "lucide-react";
 import { useStores } from '@/hooks/useStores';
+import { useCustomSettings } from '@/hooks/useCustomSettings';
 import { Store as StoreType } from '../../../app/api/external/omnigateway/types/stores';
 import { useRouter } from 'next/navigation';
 import { AddStoreModal } from './modals/add-store-modal';
 import { DeleteStoreModal } from './modals/delete-store-modal';
 import { DeactivateStoreModal } from './modals/deactivate-store-modal';
+import { SyncVBModal } from './modals/sync-vb-modal';
 
 
 const STORE_FILTERS = [
@@ -50,6 +53,8 @@ export function StoresContent() {
   
   } = useStores();
 
+  const { settings, isVenueBoostEnabled } = useCustomSettings();
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedFilter, setSelectedFilter] = useState("ALL");
@@ -58,6 +63,8 @@ export function StoresContent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StoreType | null>(null);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+
 
   useEffect(() => {
     fetchStores({
@@ -119,6 +126,14 @@ export function StoresContent() {
             <Plus className="h-4 w-4 mr-2" />
             Add Store
           </Button>
+
+          {/* Only show sync button if enabled */}
+          {isVenueBoostEnabled && (
+            <Button onClick={() => setShowSyncModal(true)}>
+              <FolderSyncIcon className="h-4 w-4 mr-2" />
+              Sync VB Stores
+            </Button>
+          )}
         </div>
       </div>
 
@@ -216,6 +231,7 @@ export function StoresContent() {
                 <TableHead>Store</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Status</TableHead>
+                {isVenueBoostEnabled && <TableHead>VB Connect</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -277,6 +293,15 @@ export function StoresContent() {
                       {store.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
+                  {/* Show VB cell conditionally */}
+                    {isVenueBoostEnabled && (
+                      <TableCell>
+                        <Badge variant={store.externalIds?.venueboostId ? "success" : "secondary"}>
+                          {store.externalIds?.venueboostId ? "Connected" : "Not Connected"}
+                        </Badge>
+                      </TableCell>
+                    )}
+
                   <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button variant="ghost" size="sm">
@@ -401,6 +426,21 @@ export function StoresContent() {
             storeName={selectedStore.name}
           />
         )}
+
+{showSyncModal && (
+  <SyncVBModal
+    isOpen={showSyncModal}
+    onClose={() => setShowSyncModal(false)}
+    onSuccess={() => {
+      fetchStores({
+        page,
+        limit: pageSize,
+        status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
+        search: searchTerm
+      });
+    }}
+  />
+)}
     </div>
   );
 }
