@@ -81,8 +81,8 @@ interface SyncVBModalProps {
                 disabled={isLoading}
                 />
             </div>
-            <DialogFooter>
-              <Button className='mt-2' type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <DialogFooter className='mt-4'>
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit">Connect</Button>
             </DialogFooter>
           </form>

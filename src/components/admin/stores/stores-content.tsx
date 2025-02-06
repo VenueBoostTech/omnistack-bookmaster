@@ -16,17 +16,19 @@ import {
   Settings,
   Trash2,
   Building2,
-  FolderSyncIcon
+  FolderSyncIcon,
+  X
 } from "lucide-react";
 import { useStores } from '@/hooks/useStores';
 import { useCustomSettings } from '@/hooks/useCustomSettings';
+import { useVenueBoost } from '@/hooks/useVenueBoost';
 import { Store as StoreType } from '../../../app/api/external/omnigateway/types/stores';
 import { useRouter } from 'next/navigation';
 import { AddStoreModal } from './modals/add-store-modal';
 import { DeleteStoreModal } from './modals/delete-store-modal';
 import { DeactivateStoreModal } from './modals/deactivate-store-modal';
 import { SyncVBModal } from './modals/sync-vb-modal';
-
+import toast from 'react-hot-toast';
 
 const STORE_FILTERS = [
   { value: "ALL", label: "All Stores" },
@@ -50,10 +52,10 @@ export function StoresContent() {
     fetchStores,
     deleteStore,
     deactivateStore
-  
   } = useStores();
 
-  const { settings, isVenueBoostEnabled } = useCustomSettings();
+  const { isVenueBoostEnabled } = useCustomSettings();
+  const { disconnectStore } = useVenueBoost();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -64,7 +66,6 @@ export function StoresContent() {
   const [selectedStore, setSelectedStore] = useState<StoreType | null>(null);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
-
 
   useEffect(() => {
     fetchStores({
@@ -93,7 +94,6 @@ export function StoresContent() {
     inactive: stores?.filter(s => !s.isActive).length || 0
   };
 
-
   const handleDeactivate = async () => {
     if (!selectedStore) return;
     await deactivateStore(selectedStore._id);
@@ -106,7 +106,28 @@ export function StoresContent() {
     setShowDeactivateModal(false);
   };
   
-  
+  // Disconnect store function with success message and refresh of store list.
+  const handleDisconnect = async (store: StoreType) => {
+    if (!store.externalIds?.venueboostId) return;
+    const vbId = parseInt(store.externalIds.venueboostId);
+    try {
+      await disconnectStore({
+        vbId,
+        osId: store._id,
+        type: 'disconnect'
+      });
+      toast.success("Store disconnected successfully");
+      fetchStores({
+        page,
+        limit: pageSize,
+        status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
+        search: searchTerm
+      });
+    } catch (error) {
+      toast.error("Error disconnecting store");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,10 +147,8 @@ export function StoresContent() {
             <Plus className="h-4 w-4 mr-2" />
             Add Store
           </Button>
-
-          {/* Only show sync button if enabled */}
           {isVenueBoostEnabled && (
-            <Button onClick={() => setShowSyncModal(true)}>
+            <Button variant="secondary" onClick={() => setShowSyncModal(true)}>
               <FolderSyncIcon className="h-4 w-4 mr-2" />
               Sync VB Stores
             </Button>
@@ -203,7 +222,6 @@ export function StoresContent() {
               </Button>
             ))}
           </div>
-
           <div className="flex gap-2 items-center">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -245,19 +263,21 @@ export function StoresContent() {
               ) : stores.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    <div className="text-4xl mb-4">🏪</div>
-                    <h3 className="text-lg font-medium">No stores found</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Start by adding your first store
-                    </p>
-                    <Button 
-                      className="mt-4"
-                      style={{ backgroundColor: "#5FC4D0" }}
-                      onClick={() => setShowAddModal(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Store
-                    </Button>
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="text-4xl mb-4">🏪</div>
+                      <h3 className="text-lg font-medium">No stores found</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Start by adding your first store
+                      </p>
+                      <Button 
+                        className="mt-4"
+                        style={{ backgroundColor: "#5FC4D0" }}
+                        onClick={() => setShowAddModal(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Store
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : stores.map((store) => (
@@ -269,22 +289,22 @@ export function StoresContent() {
                     </div>
                   </TableCell>
                   <TableCell>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div>{store.address?.addressLine1 || 'No address'}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {store.address ? (
-                          store.address.city?.name && store.address.state?.name && store.address.country?.name
-                            ? `${store.address.city.name}, ${store.address.state.name}, ${store.address.country.name}`
-                            : 'Address incomplete'
-                        ) : (
-                          'No location data'
-                        )}
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div>{store.address?.addressLine1 || 'No address'}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {store.address ? (
+                            store.address.city?.name && store.address.state?.name && store.address.country?.name
+                              ? `${store.address.city.name}, ${store.address.state.name}, ${store.address.country.name}`
+                              : 'Address incomplete'
+                          ) : (
+                            'No location data'
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
                   <TableCell>
                     <Badge 
                       variant="secondary" 
@@ -293,42 +313,53 @@ export function StoresContent() {
                       {store.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
-                  {/* Show VB cell conditionally */}
-                    {isVenueBoostEnabled && (
-                      <TableCell>
+                  {isVenueBoostEnabled && (
+                    <TableCell>
+                      <div className="flex items-center gap-2">
                         <Badge variant={store.externalIds?.venueboostId ? "success" : "secondary"}>
                           {store.externalIds?.venueboostId ? "Connected" : "Not Connected"}
                         </Badge>
-                      </TableCell>
-                    )}
-
-                  <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedStore(store);
-                            setShowDeactivateModal(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-orange-500" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedStore(store);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+                        {store.externalIds?.venueboostId && (
+                          <Button 
+                            variant="secondary" 
+                            size="2x-sm"
+                            onClick={async () => {
+                              await handleDisconnect(store);
+                            }}
+                          >
+                            <X className="h-4 w-4 text-white" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
+                  )}
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedStore(store);
+                          setShowDeactivateModal(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-orange-500" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedStore(store);
+                          setShowDeleteModal(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -418,29 +449,29 @@ export function StoresContent() {
         />
       )}
 
-        {showDeactivateModal && selectedStore && (
-          <DeactivateStoreModal
-            isOpen={showDeactivateModal}
-            onClose={() => setShowDeactivateModal(false)}
-            onConfirm={handleDeactivate}
-            storeName={selectedStore.name}
-          />
-        )}
+      {showDeactivateModal && selectedStore && (
+        <DeactivateStoreModal
+          isOpen={showDeactivateModal}
+          onClose={() => setShowDeactivateModal(false)}
+          onConfirm={handleDeactivate}
+          storeName={selectedStore.name}
+        />
+      )}
 
-{showSyncModal && (
-  <SyncVBModal
-    isOpen={showSyncModal}
-    onClose={() => setShowSyncModal(false)}
-    onSuccess={() => {
-      fetchStores({
-        page,
-        limit: pageSize,
-        status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
-        search: searchTerm
-      });
-    }}
-  />
-)}
+      {showSyncModal && (
+        <SyncVBModal
+          isOpen={showSyncModal}
+          onClose={() => setShowSyncModal(false)}
+          onSuccess={() => {
+            fetchStores({
+              page,
+              limit: pageSize,
+              status: selectedFilter !== 'ALL' ? selectedFilter : undefined,
+              search: searchTerm
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
