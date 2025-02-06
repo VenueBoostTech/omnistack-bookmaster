@@ -129,7 +129,7 @@ export function StoresContent() {
 
           {/* Only show sync button if enabled */}
           {isVenueBoostEnabled && (
-            <Button onClick={() => setShowSyncModal(true)}>
+            <Button variant="secondary" onClick={() => setShowSyncModal(true)}>
               <FolderSyncIcon className="h-4 w-4 mr-2" />
               Sync VB Stores
             </Button>
