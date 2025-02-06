@@ -40,6 +40,26 @@ export const getSidebarDataForType = (): {
       title: "Analytics",
       path: "/admin/analytics",
       icon: <BarChart3 className="w-5 h-5"/>,
+    },
+    {
+      id: 3,
+      title: "Orders",
+      path: "/admin/orders",
+      icon: <ShoppingCart className="w-5 h-5"/>,
+      children: [
+        {
+          id: "3-1",
+          title: "All Orders",
+          path: "/admin/orders",
+          icon: <ShoppingCart className="w-4 h-4"/>
+        },
+        {
+          id: "3-2",
+          title: "Returns",
+          path: "/admin/orders/returns",
+          icon: <ArrowLeftRight className="w-4 h-4"/>
+        }
+      ]
     }
   ],
   inventory: [
