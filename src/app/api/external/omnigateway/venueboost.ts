@@ -11,12 +11,12 @@ export const createVenueBoostApi = (clientApiKey: string) => {
       },
   
       listStores: async () => {
-        const { data } = await omniGateway.get('/venueboost/stores');
+        const { data } = await omniGateway.get('/vb/stores');
         return data;
       },
   
       connectStore: async (params: { vbId: number, osId: string }) => {
-        const { data } = await omniGateway.post('/venueboost/stores/connect-disconnect', {
+        const { data } = await omniGateway.post('/vb/stores/connect-disconnect', {
           ...params,
           type: 'connect'
         });
@@ -24,7 +24,7 @@ export const createVenueBoostApi = (clientApiKey: string) => {
       },
   
       disconnectStore: async (params: { vbId: number, osId: string }) => {
-        const { data } = await omniGateway.post('/venueboost/stores/connect-disconnect', {
+        const { data } = await omniGateway.post('/vb/stores/connect-disconnect', {
           ...params,
           type: 'disconnect'
         });
