@@ -20,9 +20,9 @@ export function useVenueBoost() {
     }, [vbApi]);
 
   
-    const connectVenueBoost = useCallback(async (venueShortCode: string) => {
+    const connectVenueBoost = useCallback(async (venueShortCode: string, webhookApiKey: string) => {
       if (!vbApi) throw new Error('API not ready');
-      await vbApi.connect(venueShortCode);
+      await vbApi.connect(venueShortCode, webhookApiKey);
     }, [vbApi]);
  
    

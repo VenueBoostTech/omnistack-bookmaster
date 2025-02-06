@@ -13,8 +13,7 @@ import { useVenueBoost } from "@/hooks/useVenueBoost";
 const defaultSettings: Settings['integrations'] = {
   venueBoost: {
     enabled: false,
-    apiKey: '',
-    webhookUrl: '',
+    webhookApiKey: '',
     venueShortCode: ''
   },
   bank: {
@@ -36,8 +35,7 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const { connectVenueBoost } = useVenueBoost();
   const [modalData, setModalData] = useState({
-    apiKey: '',
-    webhookUrl: '',
+    webhookApiKey: '',
     venueShortCode: '',
     provider: '',
     credentials: {}
@@ -60,8 +58,8 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
   const handleIntegrationChange = async (integration: ModalType, data: any = {}) => {
     if (!integration) return;
 
-    if (integration === 'venueBoost' && data.enabled && data.venueShortCode) {
-      await connectVenueBoost(data.venueShortCode);
+    if (integration === 'venueBoost' && data.enabled && data.venueShortCode && data.webhookApiKey) {
+      await connectVenueBoost(data.venueShortCode, data.webhookApiKey);
     }
     setLocalSettings(prev => ({
       ...prev,
@@ -77,8 +75,7 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
     if (!type) return;
     
     setModalData({
-      apiKey: localSettings[type].apiKey || '',
-      webhookUrl: localSettings[type].webhookUrl || '',
+      webhookApiKey: localSettings[type].webhookApiKey || '',
       venueShortCode: localSettings[type].venueShortCode || '',
       provider: type === 'bank' ? localSettings.bank.provider || '' : '',
       credentials: type === 'bank' ? localSettings.bank.credentials || {} : {}
@@ -143,17 +140,9 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">API Key</label>
               <Input
-                value={modalData.apiKey}
-                onChange={(e) => setModalData({ ...modalData, apiKey: e.target.value })}
+                value={modalData.webhookApiKey}
+                onChange={(e) => setModalData({ ...modalData, webhookApiKey: e.target.value })}
                 placeholder="Enter API key"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Webhook URL</label>
-              <Input
-                value={modalData.webhookUrl}
-                onChange={(e) => setModalData({ ...modalData, webhookUrl: e.target.value })}
-                placeholder="Enter webhook URL"
               />
             </div>
             <div className="space-y-2">
@@ -172,8 +161,7 @@ export function IntegrationsTab({ settings, onChange }: IntegrationsTabProps) {
             <Button 
               onClick={() => handleIntegrationChange('venueBoost', {
                 enabled: true,
-                apiKey: modalData.apiKey,
-                webhookUrl: modalData.webhookUrl,
+                webhookApiKey: modalData.webhookApiKey,
                 venueShortCode: modalData.venueShortCode
               })}
             >
