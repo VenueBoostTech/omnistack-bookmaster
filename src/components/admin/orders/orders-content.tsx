@@ -212,15 +212,17 @@ export function OrdersContent() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Order Number</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
@@ -241,44 +243,76 @@ export function OrdersContent() {
                 </TableRow>
               ) : orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>
-                    <div className="font-medium">{order.orderNumber}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div>{order.source.externalCustomerEmail}</div>
-                      <div className="text-sm text-muted-foreground">
-                        ID: {order.source.externalCustomerId}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
-                      {order.total} {order.currency}
-                    </div>
-                  </TableCell>
-                  <TableCell>{order.paymentMethod}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={getStatusBadge(order.status)}>
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
+                <TableCell>
+                  <div className="font-medium">{order.orderNumber}</div>
+                </TableCell>
+          
+                <TableCell>
+                  <div className="text-sm">
                     {new Date(order.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setShowStatusModal(true);
-                        }}
-                      >
-                        <ClipboardList className="h-4 w-4 text-blue-500" />
-                      </Button>
+                  </div>
+                </TableCell>
+          
+                <TableCell>
+                  <Badge variant="secondary" className={getStatusBadge(order.status)}>
+                    {order.status}
+                  </Badge>
+                </TableCell>
+          
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="font-medium">
+                      {order.metadata.billingInfo.name} {order.metadata.billingInfo.surname}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {order.source.externalCustomerEmail}
+                    </div>
+                  </div>
+                </TableCell>
+          
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                    {order.total} {order.currency}
+                  </div>
+                </TableCell>
+          
+                <TableCell>
+                  <div className="space-y-1">
+                    {order.items.map((item, index) => (
+                      <div key={index} className="text-sm">
+                        {item.quantity}x {item.name}
+                      </div>
+                    ))}
+                  </div>
+                </TableCell>
+          
+                <TableCell>
+                  {order.metadata.notes?.map((note, index) => (
+                    <div key={index} className="text-xs text-muted-foreground">
+                      {note.text}
+                    </div>
+                  ))}
+                </TableCell>
+          
+                <TableCell>
+                  <div className="text-sm">{order.source.type}</div>
+                  <div className="text-xs text-muted-foreground">{order.source.platform}</div>
+                </TableCell>
+          
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowStatusModal(true);
+                      }}
+                    >
+                      <ClipboardList className="h-4 w-4 text-blue-500" />
+                    </Button>
+                    {(!order.metadata.notes || order.metadata.notes.length === 0) && (
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -289,9 +323,10 @@ export function OrdersContent() {
                       >
                         <StickyNote className="h-4 w-4 text-yellow-500" />
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
               ))}
             </TableBody>
           </Table>
