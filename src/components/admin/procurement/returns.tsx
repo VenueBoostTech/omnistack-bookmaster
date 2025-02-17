@@ -233,7 +233,7 @@ export function ReturnsContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {METRIC_CARDS.map((metric) => (
           <Card key={metric.title}>
-            <CardContent className="p-6">
+            <CardContent className="p-2">
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
@@ -321,7 +321,7 @@ export function ReturnsContent() {
           </Card>
         ) : returns.length === 0 ? (
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-2">
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📦</div>
                 <h3 className="text-lg font-medium">No returns found</h3>
@@ -342,7 +342,7 @@ export function ReturnsContent() {
         ) : (
           returns.map((returnItem) => (
             <Card key={returnItem.id} className="hover:bg-accent/5 transition-colors">
-              <CardContent className="p-6">
+              <CardContent className="p-2">
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Left Column - Basic Info */}
                   <div className="flex-1">

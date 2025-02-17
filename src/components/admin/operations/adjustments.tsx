@@ -167,7 +167,7 @@ export function AdjustmentsContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {ADJUSTMENT_METRICS.map((metric) => (
           <Card key={metric.title}>
-            <CardContent className="p-6">
+            <CardContent className="p-2">
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
@@ -287,7 +287,7 @@ export function AdjustmentsContent() {
       <div className="space-y-4">
         {ADJUSTMENTS.map((adjustment) => (
           <Card key={adjustment.id} className="hover:bg-accent/5 transition-colors">
-            <CardContent className="p-6">
+            <CardContent className="p-2">
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Left Column - Basic Info */}
                 <div className="flex-1">

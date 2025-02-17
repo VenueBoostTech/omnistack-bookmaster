@@ -126,7 +126,7 @@ export function WarehouseLocations() {
      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
        {WAREHOUSE_STATS.map((stat) => (
          <Card key={stat.title}>
-           <CardContent className="p-6">
+           <CardContent className="p-2">
              <div className="flex justify-between items-start">
                <div className="space-y-2">
                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
@@ -200,7 +200,7 @@ export function WarehouseLocations() {
      <div className="grid gap-6">
        {WAREHOUSES.map((warehouse) => (
          <Card key={warehouse.id} className="hover:bg-accent/5 transition-colors">
-           <CardContent className="p-6">
+           <CardContent className="p-2">
              <div className="flex flex-col lg:flex-row gap-6">
                <div className="flex-1">
                  <div className="flex items-start justify-between">
