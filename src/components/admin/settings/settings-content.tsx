@@ -90,7 +90,7 @@ export function SettingsContent() {
         </div>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-2">
             <div className="space-y-4">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />

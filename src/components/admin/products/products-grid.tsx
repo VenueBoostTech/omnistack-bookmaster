@@ -34,7 +34,7 @@ export function ProductsGrid({ products }: { products: any[] }) {
     <div className="space-y-4">
       {products.map((product) => (
         <Card key={product.id} className="hover:bg-accent/5 transition-colors">
-          <CardContent className="p-6">
+          <CardContent className="p-2">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left Column - Product Info */}
               <div className="flex-1">

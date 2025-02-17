@@ -200,7 +200,7 @@ const getPaymentStatusColor = (status: string) => {
      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
        {METRIC_CARDS.map((metric) => (
          <Card key={metric.title}>
-           <CardContent className="p-6">
+           <CardContent className="p-2">
              <div className="flex justify-between items-start">
                <div className="space-y-2">
                  <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
