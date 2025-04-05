@@ -9,31 +9,31 @@ generator client {
 }
 
 model Client {
-  id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  name            String
-  code            String          @unique
-  taxId           String?
-  address         String?
-  phone           String?
-  email           String?
-  omniGatewayId   String?         @unique
-  omniGatewayApiKey String?       @unique
-  trackMasterId String?           @unique
-  fiscalYearStart DateTime?
-  defaultCurrency String          @default("USD")
-  status          ClientStatus    @default(ACTIVE)
-  users           User[]
-  vendors         Vendor[]
-  accounts        Account[]
-  supabaseId      String          @unique
-  transactions    Transaction[]
-  settings        Json?           @default("{}")
-  integrations    Integration[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  PurchaseOrder   PurchaseOrder[]
-  Return          Return[]
-  Department      Department[]
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  code              String          @unique
+  taxId             String?
+  address           String?
+  phone             String?
+  email             String?
+  omniGatewayId     String?         @unique
+  omniGatewayApiKey String?         @unique
+  trackMasterId     String?         @unique
+  fiscalYearStart   DateTime?
+  defaultCurrency   String          @default("USD")
+  status            ClientStatus    @default(ACTIVE)
+  users             User[]
+  vendors           Vendor[]
+  accounts          Account[]
+  supabaseId        String          @unique
+  transactions      Transaction[]
+  settings          Json?           @default("{}")
+  integrations      Integration[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  PurchaseOrder     PurchaseOrder[]
+  Return            Return[]
+  Department        Department[]
 }
 
 model Integration {
