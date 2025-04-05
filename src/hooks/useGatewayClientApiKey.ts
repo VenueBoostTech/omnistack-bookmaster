@@ -1,4 +1,5 @@
 // hooks/useGatewayClientApiKey.ts
+
 import { useEffect, useState } from 'react';
 import { useClient } from './useClient';
 
